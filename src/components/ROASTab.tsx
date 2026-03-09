@@ -1,69 +1,78 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, ComposedChart, Area } from 'recharts'
 
-type MetaMonth = { month: string; spend: number; impressions: number; clicks: number; leads: number; purchases: number }
-type GoogleMonth = { month: string; spend: number; impressions: number; clicks: number; conversions: number }
-type Revenue = { month: string; gross: number }
-
-export function ROASTab({ meta, google, revenue }: { meta: MetaMonth[]; google: GoogleMonth[]; revenue: Revenue[] }) {
-  const roasData = revenue.map(r => {
-    const m = meta.find(m => m.month === r.month)
-    const g = google.find(g => g.month === r.month)
-    const totalSpend = (m?.spend || 0) + (g?.spend || 0)
+export function ROASTab({ meta, google, revenue }: { meta: any[]; google: any[]; revenue: any[] }) {
+  const roasData = revenue.map((r: any) => {
+    const m = meta.find((m: any) => m.month === r.month)
+    const g = google.find((g: any) => g.month === r.month)
+    const metaSpend = m?.spend || 0
+    const googleSpend = g?.spend || 0
+    const totalSpend = metaSpend + googleSpend
     return {
       month: r.month.slice(2),
       roas: totalSpend > 0 ? r.gross / totalSpend : 0,
-      meta_cpl: m && m.leads > 0 ? m.spend / m.leads : 0,
-      meta_cpa: m && m.purchases > 0 ? m.spend / m.purchases : 0,
-      google_cpc: g && g.clicks > 0 ? g.spend / g.clicks : 0,
+      meta_roas: metaSpend > 0 ? r.gross / metaSpend : 0,
+      meta_cpa: m && m.purchases > 0 ? metaSpend / m.purchases : 0,
+      google_cpa: g && g.conversions > 0 ? googleSpend / g.conversions : 0,
       revenue: r.gross,
       spend: totalSpend,
+      profit: r.gross - totalSpend,
+      refund_rate: r.gross > 0 ? (r.refunds / r.gross * 100) : 0,
     }
-  }).filter(d => d.spend > 0)
+  }).filter((d: any) => d.spend > 0)
 
   return (
-    <div className="space-y-6">
-      <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-5">
-        <h3 className="text-lg font-semibold text-white mb-4">ROAS Mensal (Receita / Investimento Total)</h3>
-        <ResponsiveContainer width="100%" height={350}>
-          <LineChart data={roasData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-            <XAxis dataKey="month" stroke="#64748b" tick={{ fontSize: 10 }} interval={2} />
-            <YAxis stroke="#64748b" tick={{ fontSize: 10 }} tickFormatter={v => `${v.toFixed(2)}x`} />
-            <Tooltip
-              contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8 }}
-              formatter={(v: number, name: string) => [name === 'roas' ? `${v.toFixed(3)}x` : `R$${v.toFixed(2)}`, name]}
-            />
-            <Line type="monotone" dataKey="roas" name="ROAS" stroke="#10b981" strokeWidth={2} dot={false} />
-          </LineChart>
-        </ResponsiveContainer>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="bg-slate-800/50 rounded-lg sm:rounded-xl border border-slate-700 p-3 sm:p-5">
+        <h3 className="text-sm sm:text-lg font-semibold text-white mb-3">ROAS Mensal (Receita / Investimento)</h3>
+        <div className="h-[250px] sm:h-[350px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={roasData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+              <XAxis dataKey="month" stroke="#64748b" tick={{ fontSize: 9 }} interval="preserveStartEnd" />
+              <YAxis yAxisId="left" stroke="#10b981" tick={{ fontSize: 9 }} tickFormatter={(v: any) => `${v.toFixed(2)}x`} />
+              <YAxis yAxisId="right" orientation="right" stroke="#ef4444" tick={{ fontSize: 9 }} tickFormatter={(v: any) => `${v.toFixed(0)}%`} />
+              <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }} />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Line yAxisId="left" type="monotone" dataKey="roas" name="ROAS" stroke="#10b981" strokeWidth={2.5} dot={false} />
+              <Line yAxisId="right" type="monotone" dataKey="refund_rate" name="Refund %" stroke="#ef4444" dot={false} strokeDasharray="4 4" />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
-      <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-5">
-        <h3 className="text-lg font-semibold text-white mb-4">CPA Meta (Custo por Purchase)</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={roasData.filter(d => d.meta_cpa > 0 && d.meta_cpa < 5000)}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-            <XAxis dataKey="month" stroke="#64748b" tick={{ fontSize: 10 }} interval={2} />
-            <YAxis stroke="#64748b" tick={{ fontSize: 10 }} tickFormatter={v => `R$${v.toFixed(0)}`} />
-            <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8 }} formatter={(v: number) => `R$${v.toFixed(2)}`} />
-            <Bar dataKey="meta_cpa" name="CPA Meta" fill="#f472b6" radius={[2, 2, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="bg-slate-800/50 rounded-lg sm:rounded-xl border border-slate-700 p-3 sm:p-5">
+        <h3 className="text-sm sm:text-lg font-semibold text-white mb-3">CPA: Meta vs Google</h3>
+        <div className="h-[200px] sm:h-[280px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={roasData.filter((d: any) => d.meta_cpa > 0 && d.meta_cpa < 5000)}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+              <XAxis dataKey="month" stroke="#64748b" tick={{ fontSize: 9 }} interval="preserveStartEnd" />
+              <YAxis stroke="#64748b" tick={{ fontSize: 9 }} tickFormatter={(v: any) => `R$${v.toFixed(0)}`} />
+              <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }} formatter={(v: any) => `R$${Number(v).toFixed(2)}`} />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Line type="monotone" dataKey="meta_cpa" name="Meta CPA" stroke="#3b82f6" dot={false} strokeWidth={2} />
+              <Line type="monotone" dataKey="google_cpa" name="Google CPA" stroke="#f59e0b" dot={false} strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
-      <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-5">
-        <h3 className="text-lg font-semibold text-white mb-4">Receita vs Investimento</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={roasData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-            <XAxis dataKey="month" stroke="#64748b" tick={{ fontSize: 10 }} interval={2} />
-            <YAxis stroke="#64748b" tick={{ fontSize: 10 }} tickFormatter={v => `${(v/1000).toFixed(0)}K`} />
-            <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8 }} formatter={(v: number) => `R$${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} />
-            <Legend />
-            <Bar dataKey="revenue" name="Receita" fill="#10b981" radius={[2, 2, 0, 0]} />
-            <Bar dataKey="spend" name="Investimento" fill="#ef4444" radius={[2, 2, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="bg-slate-800/50 rounded-lg sm:rounded-xl border border-slate-700 p-3 sm:p-5">
+        <h3 className="text-sm sm:text-lg font-semibold text-white mb-3">Receita vs Investimento vs Lucro/Prejuizo</h3>
+        <div className="h-[250px] sm:h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={roasData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+              <XAxis dataKey="month" stroke="#64748b" tick={{ fontSize: 9 }} interval="preserveStartEnd" />
+              <YAxis stroke="#64748b" tick={{ fontSize: 9 }} tickFormatter={(v: any) => `${(v/1000).toFixed(0)}K`} />
+              <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }} formatter={(v: any) => `R$${Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Bar dataKey="revenue" name="Receita" fill="#10b981" radius={[2, 2, 0, 0]} />
+              <Bar dataKey="spend" name="Investimento" fill="#ef4444" radius={[2, 2, 0, 0]} />
+              <Area type="monotone" dataKey="profit" name="Resultado" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.1} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   )
