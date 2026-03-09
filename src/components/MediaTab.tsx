@@ -25,8 +25,22 @@ export function MediaTab({ meta, google, metaStats, googleCampaigns }: { meta: a
   const totalMetaImpr = meta.reduce((s: number, m: any) => s + m.impressions, 0)
   const totalGoogleImpr = google.reduce((s: number, g: any) => s + g.impressions, 0)
 
-  const metaObjData = Object.entries(metaStats?.by_objective || {}).map(([k, v]: any) => ({ name: k.replace('OUTCOME_',''), value: v }))
-  const googleChannelData = Object.entries(googleCampaigns?.by_channel || {}).map(([k, v]: any) => ({ name: k, value: v }))
+  // Derive objective/channel distributions from campaign arrays
+  const metaObjMap: any = {}
+  const metaCampaigns = Array.isArray(metaStats) ? metaStats : []
+  metaCampaigns.forEach((c: any) => {
+    const obj = (c.objective || 'UNKNOWN').replace('OUTCOME_', '')
+    metaObjMap[obj] = (metaObjMap[obj] || 0) + 1
+  })
+  const metaObjData = Object.entries(metaObjMap).map(([k, v]: any) => ({ name: k, value: v }))
+
+  const googleChannelMap: any = {}
+  const googleCampaignList = Array.isArray(googleCampaigns) ? googleCampaigns : []
+  googleCampaignList.forEach((c: any) => {
+    const ch = c.channel || c.type || 'UNKNOWN'
+    googleChannelMap[ch] = (googleChannelMap[ch] || 0) + 1
+  })
+  const googleChannelData = Object.entries(googleChannelMap).map(([k, v]: any) => ({ name: k, value: v }))
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -119,7 +133,7 @@ export function MediaTab({ meta, google, metaStats, googleCampaigns }: { meta: a
           </div>
         </div>
         <div className="bg-slate-800/50 rounded-lg sm:rounded-xl border border-slate-700 p-3 sm:p-5">
-          <h3 className="text-sm sm:text-base font-semibold text-white mb-3">Google Campaigns por Canal ({googleCampaigns?.total} total)</h3>
+          <h3 className="text-sm sm:text-base font-semibold text-white mb-3">Google Campaigns por Canal ({googleCampaignList.length} total)</h3>
           <div className="h-[200px] sm:h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
