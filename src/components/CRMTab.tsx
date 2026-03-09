@@ -73,7 +73,7 @@ export function CRMTab({ daily, details }: { daily: any[]; details: any }) {
           <div className="h-[220px] sm:h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={pipelineData} dataKey="count" nameKey="pipeline" cx="50%" cy="50%" outerRadius="80%" label={({ pipeline, percent }: any) => percent > 0.05 ? `${(pipeline || 'N/A').slice(0, 15)} ${(percent*100).toFixed(0)}%` : ''} labelLine={false}>
+                <Pie data={pipelineData} dataKey="count" nameKey="pipeline" cx="50%" cy="50%" outerRadius="70%" label={({ pipeline, percent, x, y }: any) => percent > 0.03 ? <text x={x} y={y} fill="#e2e8f0" fontSize={10} textAnchor="middle" dominantBaseline="central">{`${(pipeline || 'N/A').slice(0, 15)} ${(percent*100).toFixed(0)}%`}</text> : null} labelLine={true}>
                   {pipelineData.map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
                 <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }} />

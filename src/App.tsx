@@ -9,7 +9,6 @@ import { GeoTab } from './components/GeoTab'
 import { CRMTab } from './components/CRMTab'
 import { CustomersTab } from './components/CustomersTab'
 import { LeadsTab } from './components/LeadsTab'
-import { SubscriptionsTab } from './components/SubscriptionsTab'
 import { MarketingTab } from './components/MarketingTab'
 import { PaymentsTab } from './components/PaymentsTab'
 import { OverviewTab } from './components/OverviewTab'
@@ -25,7 +24,6 @@ const tabs = [
   { id: 'crm', label: 'CRM' },
   { id: 'clientes', label: 'Clientes' },
   { id: 'leads', label: 'Leads' },
-  { id: 'assinaturas', label: 'Assinaturas' },
   { id: 'marketing', label: 'Marketing' },
   { id: 'pagamentos', label: 'Pagamentos' },
   { id: 'debug', label: 'Debug' },
@@ -150,7 +148,6 @@ function App() {
           {activeTab === 'crm' && <CRMTab daily={filtered.crm_daily} details={data.crm_details} />}
           {activeTab === 'clientes' && <CustomersTab data={{ ...data.customers, monthly_new: filtered.customers_monthly }} />}
           {activeTab === 'leads' && <LeadsTab data={{ ...data.leads, monthly_new: filtered.leads_monthly }} />}
-          {activeTab === 'assinaturas' && <SubscriptionsTab data={{ ...data.subscriptions, monthly_new: filtered.subs_monthly }} refunds={{ ...data.refund_details, monthly: filtered.refund_monthly }} />}
           {activeTab === 'marketing' && <MarketingTab conversions={data.marketing_conversions} campaigns={data.meta_campaigns} />}
           {activeTab === 'pagamentos' && <PaymentsTab methods={filtered.payments} installments={data.installments} />}
           {activeTab === 'debug' && <DebugTab data={data} />}

@@ -72,7 +72,7 @@ export function MarketingTab({ conversions, campaigns }: { conversions: any[]; c
           <div className="h-[250px] sm:h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={objectiveData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" label={({ name, percent }: any) => percent > 0.05 ? `${name} ${(percent*100).toFixed(0)}%` : ''} labelLine={false}>
+                <Pie data={objectiveData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="65%" label={({ name, percent, x, y }: any) => percent > 0.03 ? <text x={x} y={y} fill="#e2e8f0" fontSize={10} textAnchor="middle" dominantBaseline="central">{`${name} ${(percent*100).toFixed(0)}%`}</text> : null} labelLine={true}>
                   {objectiveData.map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
                 <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }} />
