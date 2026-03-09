@@ -4,8 +4,7 @@ export function ProductsTab({ data, utmSources, utmCampaigns }: { data: any[]; u
   const top15 = data.slice(0, 15).map((p: any) => ({
     ...p,
     short: p.name.length > 35 ? p.name.slice(0, 35) + '...' : p.name,
-    ticket: p.approved > 0 ? p.gross / p.approved : 0,
-    refundRate: p.count > 0 ? (p.refunded / p.count * 100) : 0,
+    ticket: p.count > 0 ? p.gross / p.count : 0,
   }))
 
   return (
@@ -35,22 +34,18 @@ export function ProductsTab({ data, utmSources, utmCampaigns }: { data: any[]; u
                 <th className="text-left py-1.5 px-2">#</th>
                 <th className="text-left py-1.5 px-2">Produto</th>
                 <th className="text-right py-1.5 px-2">Vendas</th>
-                <th className="text-right py-1.5 px-2">Aprovadas</th>
                 <th className="text-right py-1.5 px-2">Receita</th>
-                <th className="text-right py-1.5 px-2">Ticket</th>
-                <th className="text-right py-1.5 px-2">Reemb %</th>
+                <th className="text-right py-1.5 px-2">Ticket Medio</th>
               </tr>
             </thead>
             <tbody>
               {data.slice(0, 30).map((p: any, i: number) => (
                 <tr key={i} className="border-b border-slate-700/50 hover:bg-slate-700/20">
                   <td className="py-1 px-2 text-slate-500">{i + 1}</td>
-                  <td className="py-1 px-2 text-slate-300 truncate max-w-[200px]" title={p.name}>{p.name.slice(0, 45)}</td>
-                  <td className="py-1 px-2 text-right">{p.count.toLocaleString('pt-BR')}</td>
-                  <td className="py-1 px-2 text-right text-emerald-400">{p.approved.toLocaleString('pt-BR')}</td>
-                  <td className="py-1 px-2 text-right text-emerald-400">R${p.gross.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                  <td className="py-1 px-2 text-right text-cyan-400">R${(p.approved > 0 ? p.gross / p.approved : 0).toFixed(2)}</td>
-                  <td className="py-1 px-2 text-right text-red-400">{(p.count > 0 ? p.refunded / p.count * 100 : 0).toFixed(1)}%</td>
+                  <td className="py-1 px-2 text-slate-300 truncate max-w-[200px]" title={p.name}>{p.name?.slice(0, 45)}</td>
+                  <td className="py-1 px-2 text-right">{(p.count || 0).toLocaleString('pt-BR')}</td>
+                  <td className="py-1 px-2 text-right text-emerald-400">R${(p.gross || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                  <td className="py-1 px-2 text-right text-cyan-400">R${(p.count > 0 ? p.gross / p.count : 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                 </tr>
               ))}
             </tbody>
@@ -75,8 +70,8 @@ export function ProductsTab({ data, utmSources, utmCampaigns }: { data: any[]; u
                 {utmSources?.map((s: any, i: number) => (
                   <tr key={i} className="border-b border-slate-700/50 hover:bg-slate-700/20">
                     <td className="py-1 px-2 text-slate-300 truncate max-w-[120px]">{s.source}</td>
-                    <td className="py-1 px-2 text-right">{s.count.toLocaleString('pt-BR')}</td>
-                    <td className="py-1 px-2 text-right text-emerald-400">R${s.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td className="py-1 px-2 text-right">{(s.count || 0).toLocaleString('pt-BR')}</td>
+                    <td className="py-1 px-2 text-right text-emerald-400">R${(s.gross || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                   </tr>
                 ))}
               </tbody>
@@ -98,8 +93,8 @@ export function ProductsTab({ data, utmSources, utmCampaigns }: { data: any[]; u
                 {utmCampaigns?.map((c: any, i: number) => (
                   <tr key={i} className="border-b border-slate-700/50 hover:bg-slate-700/20">
                     <td className="py-1 px-2 text-slate-300 truncate max-w-[150px]" title={c.campaign}>{c.campaign}</td>
-                    <td className="py-1 px-2 text-right">{c.count.toLocaleString('pt-BR')}</td>
-                    <td className="py-1 px-2 text-right text-emerald-400">R${c.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td className="py-1 px-2 text-right">{(c.count || 0).toLocaleString('pt-BR')}</td>
+                    <td className="py-1 px-2 text-right text-emerald-400">R${(c.gross || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                   </tr>
                 ))}
               </tbody>

@@ -6,10 +6,10 @@ export function CRMTab({ daily, details }: { daily: any[]; details: any }) {
   const sorted = [...daily].sort((a: any, b: any) => a.date.localeCompare(b.date))
   const chartData = sorted.map((d: any) => ({ ...d, label: d.date.slice(5) }))
 
-  const totalWon = daily.reduce((s: number, d: any) => s + d.value_won, 0)
-  const totalDeals = daily.reduce((s: number, d: any) => s + d.won, 0)
-  const totalNew = daily.reduce((s: number, d: any) => s + d.new, 0)
-  const totalLost = daily.reduce((s: number, d: any) => s + d.lost, 0)
+  const totalWon = daily.reduce((s: number, d: any) => s + (d.won_value || 0), 0)
+  const totalDeals = daily.reduce((s: number, d: any) => s + (d.won_count || 0), 0)
+  const totalNew = daily.reduce((s: number, d: any) => s + (d.new_deals || 0), 0)
+  const totalLost = daily.reduce((s: number, d: any) => s + (d.lost_count || 0), 0)
   const avgTicket = totalDeals > 0 ? totalWon / totalDeals : 0
 
   const stageData = details?.by_stage || []
@@ -42,7 +42,7 @@ export function CRMTab({ daily, details }: { daily: any[]; details: any }) {
               <XAxis dataKey="label" stroke="#64748b" tick={{ fontSize: 8 }} interval={4} />
               <YAxis stroke="#64748b" tick={{ fontSize: 9 }} tickFormatter={(v: any) => `${(v/1000).toFixed(0)}K`} />
               <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }} formatter={(v: any) => `R$${Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} />
-              <Bar dataKey="value_won" name="Valor Won" fill="#10b981" radius={[2, 2, 0, 0]} />
+              <Bar dataKey="won_value" name="Valor Won" fill="#10b981" radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -58,22 +58,22 @@ export function CRMTab({ daily, details }: { daily: any[]; details: any }) {
               <YAxis stroke="#64748b" tick={{ fontSize: 9 }} />
               <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Line type="monotone" dataKey="new" name="Novos" stroke="#8b5cf6" dot={false} />
-              <Line type="monotone" dataKey="won" name="Won" stroke="#10b981" dot={false} />
-              <Line type="monotone" dataKey="lost" name="Lost" stroke="#ef4444" dot={false} />
+              <Line type="monotone" dataKey="new_deals" name="Novos" stroke="#8b5cf6" dot={false} />
+              <Line type="monotone" dataKey="won_count" name="Won" stroke="#10b981" dot={false} />
+              <Line type="monotone" dataKey="lost_count" name="Lost" stroke="#ef4444" dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Pipelines and Stages */}
+      {/* Pipelines and Loss Reasons */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <div className="bg-slate-800/50 rounded-lg sm:rounded-xl border border-slate-700 p-3 sm:p-5">
           <h3 className="text-sm sm:text-base font-semibold text-white mb-3">Deals por Pipeline</h3>
           <div className="h-[220px] sm:h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={pipelineData} dataKey="count" nameKey="pipeline" cx="50%" cy="50%" outerRadius="80%" label={({ pipeline, percent }: any) => percent > 0.05 ? `${pipeline?.slice(0, 15)} ${(percent*100).toFixed(0)}%` : ''} labelLine={false}>
+                <Pie data={pipelineData} dataKey="count" nameKey="pipeline" cx="50%" cy="50%" outerRadius="80%" label={({ pipeline, percent }: any) => percent > 0.05 ? `${(pipeline || 'N/A').slice(0, 15)} ${(percent*100).toFixed(0)}%` : ''} labelLine={false}>
                   {pipelineData.map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
                 <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }} />
@@ -106,24 +106,20 @@ export function CRMTab({ daily, details }: { daily: any[]; details: any }) {
 
       {/* Stages Table */}
       <div className="bg-slate-800/50 rounded-lg sm:rounded-xl border border-slate-700 p-3 sm:p-5">
-        <h3 className="text-sm sm:text-lg font-semibold text-white mb-3">Deals por Stage (Valor)</h3>
+        <h3 className="text-sm sm:text-lg font-semibold text-white mb-3">Deals por Stage</h3>
         <div className="overflow-x-auto -mx-3 sm:mx-0">
           <table className="w-full text-xs sm:text-sm min-w-[400px]">
             <thead>
               <tr className="text-slate-400 border-b border-slate-700">
                 <th className="text-left py-1.5 px-2 sm:px-3">Stage</th>
                 <th className="text-right py-1.5 px-2 sm:px-3">Deals</th>
-                <th className="text-right py-1.5 px-2 sm:px-3">Valor Total</th>
-                <th className="text-right py-1.5 px-2 sm:px-3">Ticket</th>
               </tr>
             </thead>
             <tbody>
               {stageData.map((s: any, i: number) => (
                 <tr key={i} className="border-b border-slate-700/50 hover:bg-slate-700/20">
                   <td className="py-1 px-2 sm:px-3 text-slate-300 truncate max-w-[180px]">{s.stage}</td>
-                  <td className="py-1 px-2 sm:px-3 text-right">{s.count.toLocaleString('pt-BR')}</td>
-                  <td className="py-1 px-2 sm:px-3 text-right text-emerald-400">R${s.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                  <td className="py-1 px-2 sm:px-3 text-right text-amber-400">R${(s.count > 0 ? s.value / s.count : 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                  <td className="py-1 px-2 sm:px-3 text-right">{(s.count || 0).toLocaleString('pt-BR')}</td>
                 </tr>
               ))}
             </tbody>

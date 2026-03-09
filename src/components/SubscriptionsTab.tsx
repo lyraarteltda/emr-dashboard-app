@@ -3,29 +3,33 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#ec4899', '#06b6d4', '#f97316']
 
 export function SubscriptionsTab({ data, refunds }: { data: any; refunds: any }) {
-  const statusData = Object.entries(data.by_status || {}).map(([k, v]: any) => ({ name: k, value: v }))
-  const pmData = Object.entries(data.by_payment_method || {}).map(([k, v]: any) => ({ name: k, value: v }))
+  // by_status and by_payment_method are arrays of {status/method, count}
+  const statusData = (data.by_status || []).map((s: any) => ({ name: s.status, value: s.count }))
+  const pmData = (data.by_payment_method || []).map((p: any) => ({ name: p.method || 'N/A', value: p.count }))
   const monthlyData = (data.monthly_new || []).map((d: any) => ({ ...d, label: d.month.slice(2) }))
   const refundMonthly = (refunds.monthly || []).map((d: any) => ({ ...d, label: d.month.slice(2) }))
+
+  const activeCount = (data.by_status || []).find((s: any) => s.status === 'active')?.count || 0
+  const cancelledCount = (data.by_status || []).find((s: any) => s.status === 'canceled' || s.status === 'cancelled')?.count || 0
 
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         <div className="bg-slate-800/50 rounded-lg border border-orange-500/30 p-2.5 sm:p-4">
           <div className="text-[10px] sm:text-xs text-slate-400">Total Assinaturas</div>
-          <div className="text-lg sm:text-2xl font-bold text-orange-400">{data.total?.toLocaleString('pt-BR')}</div>
+          <div className="text-lg sm:text-2xl font-bold text-orange-400">{(data.total || 0).toLocaleString('pt-BR')}</div>
         </div>
         <div className="bg-slate-800/50 rounded-lg border border-emerald-500/30 p-2.5 sm:p-4">
           <div className="text-[10px] sm:text-xs text-slate-400">Status Ativas</div>
-          <div className="text-lg sm:text-2xl font-bold text-emerald-400">{(data.by_status?.active || 0).toLocaleString('pt-BR')}</div>
+          <div className="text-lg sm:text-2xl font-bold text-emerald-400">{activeCount.toLocaleString('pt-BR')}</div>
         </div>
         <div className="bg-slate-800/50 rounded-lg border border-red-500/30 p-2.5 sm:p-4">
           <div className="text-[10px] sm:text-xs text-slate-400">Canceladas</div>
-          <div className="text-lg sm:text-2xl font-bold text-red-400">{(data.by_status?.cancelled || 0).toLocaleString('pt-BR')}</div>
+          <div className="text-lg sm:text-2xl font-bold text-red-400">{cancelledCount.toLocaleString('pt-BR')}</div>
         </div>
         <div className="bg-slate-800/50 rounded-lg border border-blue-500/30 p-2.5 sm:p-4">
           <div className="text-[10px] sm:text-xs text-slate-400">Total Reembolsos</div>
-          <div className="text-lg sm:text-2xl font-bold text-blue-400">{refunds.by_reason?.reduce((s: number, r: any) => s + r.count, 0)?.toLocaleString('pt-BR')}</div>
+          <div className="text-lg sm:text-2xl font-bold text-blue-400">{(refunds.by_reason || []).reduce((s: number, r: any) => s + r.count, 0).toLocaleString('pt-BR')}</div>
         </div>
       </div>
 
@@ -63,7 +67,7 @@ export function SubscriptionsTab({ data, refunds }: { data: any; refunds: any })
           <div className="h-[220px] sm:h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={pmData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" label={({ name, percent }: any) => `${name} ${(percent*100).toFixed(0)}%`} labelLine={false}>
+                <Pie data={pmData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" label={({ name, percent }: any) => `${name || 'N/A'} ${(percent*100).toFixed(0)}%`} labelLine={false}>
                   {pmData.map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
                 <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }} />
@@ -99,15 +103,13 @@ export function SubscriptionsTab({ data, refunds }: { data: any; refunds: any })
               <tr className="text-slate-400 border-b border-slate-700">
                 <th className="text-left py-1.5 px-2 sm:px-3">Motivo</th>
                 <th className="text-right py-1.5 px-2 sm:px-3">Qtd</th>
-                <th className="text-right py-1.5 px-2 sm:px-3">Valor</th>
               </tr>
             </thead>
             <tbody>
-              {refunds.by_reason?.map((r: any, i: number) => (
+              {(refunds.by_reason || []).map((r: any, i: number) => (
                 <tr key={i} className="border-b border-slate-700/50 hover:bg-slate-700/20">
                   <td className="py-1 px-2 sm:px-3 text-slate-300 truncate max-w-[200px]">{r.reason}</td>
                   <td className="py-1 px-2 sm:px-3 text-right text-amber-400">{r.count}</td>
-                  <td className="py-1 px-2 sm:px-3 text-right text-red-400">R${r.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                 </tr>
               ))}
             </tbody>

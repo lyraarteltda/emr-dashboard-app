@@ -13,7 +13,12 @@ export function KPICards({ kpis, year }: { kpis: any; year?: string }) {
   const cacLead = kpis.total_leads > 0 ? kpis.total_ad_spend / kpis.total_leads : 0
   const cacDeal = kpis.total_crm_deals_won > 0 ? kpis.total_ad_spend / kpis.total_crm_deals_won : 0
 
+  const totalRevenue = (kpis.total_checkout_gross || 0) + (kpis.total_crm_won_value || 0)
+  const totalSpent = kpis.total_ad_spend || 0
+
   const cards = [
+    { label: 'RECEITA TOTAL', value: fmt(totalRevenue), sub: `Checkout + CRM Won`, color: 'bg-gradient-to-br from-emerald-500/20 to-purple-500/20 border-emerald-400/50 text-emerald-300', source: 'Guru + CRM' },
+    { label: 'TOTAL INVESTIDO', value: fmt(totalSpent), sub: `Meta + Google Ads`, color: 'bg-gradient-to-br from-blue-500/20 to-red-500/20 border-blue-400/50 text-blue-300', source: 'Meta + Google' },
     { label: 'CRM Won Value', value: fmt(kpis.total_crm_won_value || 0), sub: `${fmtN(kpis.total_crm_deals_won || 0)} deals fechados`, color: 'bg-purple-500/10 border-purple-500/30 text-purple-400', source: 'RD Station CRM' },
     { label: 'Checkout Revenue', value: fmt(kpis.total_checkout_gross || 0), sub: `Liq: ${fmt(kpis.total_checkout_net || 0)}`, color: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400', source: 'Guru Digital' },
     { label: 'Investimento Ads', value: fmt(kpis.total_ad_spend || 0), sub: `Meta: ${fmt(kpis.total_meta_spend || 0)} | Google: ${fmt(kpis.total_google_spend || 0)}`, color: 'bg-blue-500/10 border-blue-500/30 text-blue-400', source: 'Meta + Google' },
