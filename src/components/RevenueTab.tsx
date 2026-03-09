@@ -1,6 +1,6 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, ComposedChart, Line } from 'recharts'
 
-export function RevenueTab({ monthly, daily }: { monthly: any[]; daily: any[] }) {
+export function RevenueTab({ monthly, daily, crmMonthly }: { monthly: any[]; daily: any[]; crmMonthly?: any[] }) {
   const monthData = monthly.map(d => ({ ...d, label: d.month.slice(2) }))
   const dailyData = daily.map((d: any) => ({ ...d, label: d.date.slice(5) }))
 

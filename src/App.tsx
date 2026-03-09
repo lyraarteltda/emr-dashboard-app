@@ -41,10 +41,12 @@ function App() {
 
   const filtered = useMemo(() => ({
     monthly_revenue: filterByYear(data.monthly_revenue, selectedYear),
+    monthly_combined: filterByYear(data.monthly_combined, selectedYear),
     daily_revenue: filterByYear(data.daily_revenue, selectedYear),
     meta_monthly: filterByYear(data.meta_monthly, selectedYear),
     google_monthly: filterByYear(data.google_monthly, selectedYear),
     crm_daily: filterByYear(data.crm_daily, selectedYear),
+    crm_monthly_won: filterByYear(data.crm_monthly_won, selectedYear),
     refund_monthly: filterByYear(data.refund_details?.monthly || [], selectedYear),
     customers_monthly: filterByYear(data.customers?.monthly_new || [], selectedYear),
     leads_monthly: filterByYear(data.leads?.monthly_new || [], selectedYear),
@@ -59,8 +61,10 @@ function App() {
     const ys = data.yearly_summary?.find((y: any) => y.year === selectedYear)
     if (!ys) return data.overview
     return {
-      total_gross_revenue: ys.gross,
-      total_net_revenue: ys.net,
+      total_checkout_gross: ys.checkout_gross,
+      total_checkout_net: ys.checkout_net,
+      total_crm_won_value: ys.crm_won_value,
+      total_crm_deals_won: ys.crm_deals_won,
       total_refunds: ys.refunds,
       total_chargebacks: ys.chargebacks,
       total_transactions: ys.txns,
@@ -69,13 +73,17 @@ function App() {
       total_subscriptions: ys.subscriptions_new,
       total_meta_spend: ys.meta_spend,
       total_google_spend: ys.google_spend,
-      total_ad_spend: ys.meta_spend + ys.google_spend,
-      total_crm_won_value: ys.crm_won_value,
-      total_crm_deals_won: ys.crm_deals_won,
+      total_ad_spend: ys.total_ad_spend,
       total_meta_campaigns: data.overview?.total_meta_campaigns || 0,
       total_google_campaigns: data.overview?.total_google_campaigns || 0,
       total_products: data.overview?.total_products || 0,
       data_range: data.overview?.data_range,
+      roas_checkout: ys.roas_checkout,
+      roas_crm: ys.roas_crm,
+      cac_per_lead: ys.cac_per_lead,
+      cac_per_deal: ys.cac_per_deal,
+      avg_deal_value: ys.avg_deal_value,
+      ltv_checkout: ys.ticket_checkout,
     }
   }, [selectedYear])
 
@@ -90,10 +98,9 @@ function App() {
                 <span className="text-emerald-400 ml-1 sm:ml-2 text-sm sm:text-lg font-medium">Eu Medico Residente</span>
               </h1>
               <p className="text-slate-400 text-[10px] sm:text-sm mt-0.5">
-                5 fontes | 30 CSVs | ~2M registros | Supabase backend
+                5 fontes | 30 CSVs | ~2M registros | Hover nos KPIs para ver a fonte
               </p>
             </div>
-            {/* Year Selector */}
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <select
                 value={selectedYear}
@@ -132,10 +139,10 @@ function App() {
         )}
         <KPICards kpis={yearKPIs} year={selectedYear} />
         <div className="mt-4 sm:mt-6">
-          {activeTab === 'overview' && <OverviewTab yearlySummary={data.yearly_summary} overview={data.overview} selectedYear={selectedYear} />}
-          {activeTab === 'receita' && <RevenueTab monthly={filtered.monthly_revenue} daily={filtered.daily_revenue} />}
+          {activeTab === 'overview' && <OverviewTab yearlySummary={data.yearly_summary} overview={data.overview} selectedYear={selectedYear} monthlyCombined={filtered.monthly_combined} cohort={data.cohort} ltv={data.ltv} dataSources={data.data_sources} />}
+          {activeTab === 'receita' && <RevenueTab monthly={filtered.monthly_revenue} daily={filtered.daily_revenue} crmMonthly={filtered.crm_monthly_won} />}
           {activeTab === 'midia' && <MediaTab meta={filtered.meta_monthly} google={filtered.google_monthly} metaStats={data.meta_campaigns} googleCampaigns={data.google_campaigns} />}
-          {activeTab === 'roas' && <ROASTab meta={filtered.meta_monthly} google={filtered.google_monthly} revenue={filtered.monthly_revenue} />}
+          {activeTab === 'roas' && <ROASTab meta={filtered.meta_monthly} google={filtered.google_monthly} revenue={filtered.monthly_revenue} crmMonthly={filtered.crm_monthly_won} monthlyCombined={filtered.monthly_combined} />}
           {activeTab === 'produtos' && <ProductsTab data={filtered.products} utmSources={data.utm_sources} utmCampaigns={data.utm_campaigns} />}
           {activeTab === 'geo' && <GeoTab data={filtered.states} />}
           {activeTab === 'crm' && <CRMTab daily={filtered.crm_daily} details={data.crm_details} />}
@@ -148,7 +155,7 @@ function App() {
       </main>
 
       <footer className="text-center py-4 text-slate-600 text-[10px] sm:text-xs border-t border-slate-800 px-4">
-        EMR Dashboard v4.0 | Maestros da IA | Supabase Backend | Guru + Meta + Google + RD Station CRM + RD Station Marketing
+        EMR Dashboard v5.0 | Maestros da IA | Dual-Revenue (CRM + Checkout) | Guru + Meta + Google + RD Station CRM + RD Station Marketing
       </footer>
     </div>
   )
