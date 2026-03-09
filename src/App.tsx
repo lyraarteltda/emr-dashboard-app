@@ -13,6 +13,7 @@ import { SubscriptionsTab } from './components/SubscriptionsTab'
 import { MarketingTab } from './components/MarketingTab'
 import { PaymentsTab } from './components/PaymentsTab'
 import { OverviewTab } from './components/OverviewTab'
+import { DebugTab } from './components/DebugTab'
 
 const tabs = [
   { id: 'overview', label: 'Overview' },
@@ -27,6 +28,7 @@ const tabs = [
   { id: 'assinaturas', label: 'Assinaturas' },
   { id: 'marketing', label: 'Marketing' },
   { id: 'pagamentos', label: 'Pagamentos' },
+  { id: 'debug', label: 'Debug' },
 ]
 
 function filterByYear(arr: any[], year: string) {
@@ -151,6 +153,7 @@ function App() {
           {activeTab === 'assinaturas' && <SubscriptionsTab data={{ ...data.subscriptions, monthly_new: filtered.subs_monthly }} refunds={{ ...data.refund_details, monthly: filtered.refund_monthly }} />}
           {activeTab === 'marketing' && <MarketingTab conversions={data.marketing_conversions} campaigns={data.meta_campaigns} />}
           {activeTab === 'pagamentos' && <PaymentsTab methods={filtered.payments} installments={data.installments} />}
+          {activeTab === 'debug' && <DebugTab data={data} />}
         </div>
       </main>
 

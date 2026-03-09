@@ -1,5 +1,9 @@
-const fmt = (v: number) => v >= 1e6 ? `R$${(v/1e6).toFixed(2)}M` : v >= 1e3 ? `R$${(v/1e3).toFixed(1)}K` : `R$${v.toFixed(0)}`
-const fmtN = (v: number) => v >= 1e6 ? `${(v/1e6).toFixed(1)}M` : v >= 1e3 ? `${(v/1e3).toFixed(1)}K` : v.toLocaleString('pt-BR')
+const fmt = (v: number) => {
+  if (v >= 1e6) return `R$ ${(v/1e6).toFixed(2).replace('.', ',')}M`
+  if (v >= 1e3) return `R$ ${(v/1e3).toFixed(1).replace('.', ',')}K`
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+const fmtN = (v: number) => v >= 1e6 ? `${(v/1e6).toFixed(1).replace('.', ',')}M` : v >= 1e3 ? `${(v/1e3).toFixed(1).replace('.', ',')}K` : v.toLocaleString('pt-BR')
 
 export function KPICards({ kpis, year }: { kpis: any; year?: string }) {
   const roasCRM = kpis.total_ad_spend > 0 ? (kpis.total_crm_won_value / kpis.total_ad_spend) : 0
