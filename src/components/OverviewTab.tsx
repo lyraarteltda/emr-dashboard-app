@@ -20,8 +20,74 @@ export function OverviewTab({ yearlySummary, overview, selectedYear, monthlyComb
 
   const COLORS = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899']
 
+  // Totals for all-period row
+  const totalCheckout = yearData.reduce((s: number, y: any) => s + y.checkout_gross, 0)
+  const totalCRM = yearData.reduce((s: number, y: any) => s + y.crm_won_value, 0)
+  const totalMeta = yearData.reduce((s: number, y: any) => s + y.meta_spend, 0)
+  const totalGoogle = yearData.reduce((s: number, y: any) => s + y.google_spend, 0)
+  const totalAds = totalMeta + totalGoogle
+  const totalRefunds = yearData.reduce((s: number, y: any) => s + y.refunds, 0)
+  const totalTxns = yearData.reduce((s: number, y: any) => s + y.txns, 0)
+  const totalLeads = yearData.reduce((s: number, y: any) => s + y.leads_new, 0)
+
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* ANNUAL SUMMARY TABLE — Revenue, Spend, ROAS */}
+      <div className="bg-slate-800/50 rounded-lg sm:rounded-xl border border-emerald-500/30 p-3 sm:p-5">
+        <h3 className="text-sm sm:text-lg font-semibold text-white mb-1">Resumo Anual — Receita, Investimento & ROAS</h3>
+        <p className="text-[9px] sm:text-xs text-slate-400 mb-3">Visao consolidada de todas as fontes por ano</p>
+        <div className="overflow-x-auto -mx-3 sm:mx-0">
+          <table className="w-full text-[10px] sm:text-xs min-w-[800px]">
+            <thead>
+              <tr className="text-slate-400 border-b border-slate-700">
+                <th className="text-left py-2 px-2">Ano</th>
+                <th className="text-right py-2 px-2">Checkout Gross</th>
+                <th className="text-right py-2 px-2">CRM Won</th>
+                <th className="text-right py-2 px-2">Meta Spend</th>
+                <th className="text-right py-2 px-2">Google Spend</th>
+                <th className="text-right py-2 px-2">Total Ads</th>
+                <th className="text-right py-2 px-2">ROAS Checkout</th>
+                <th className="text-right py-2 px-2">ROAS CRM</th>
+                <th className="text-right py-2 px-2">Reembolsos</th>
+                <th className="text-right py-2 px-2">Txns</th>
+                <th className="text-right py-2 px-2">Leads</th>
+              </tr>
+            </thead>
+            <tbody>
+              {yearData.map((y: any) => (
+                <tr key={y.year} className="border-b border-slate-700/50 hover:bg-slate-700/20">
+                  <td className="py-2 px-2 font-bold text-white">{y.year}</td>
+                  <td className="py-2 px-2 text-right text-emerald-400 font-medium">{fmt(y.checkout_gross)}</td>
+                  <td className={`py-2 px-2 text-right ${y.crm_won_value > 0 ? 'text-purple-400' : 'text-slate-600'}`}>{y.crm_won_value > 0 ? fmt(y.crm_won_value) : '-'}</td>
+                  <td className={`py-2 px-2 text-right ${y.meta_spend > 0 ? 'text-blue-400' : 'text-slate-600'}`}>{y.meta_spend > 0 ? fmt(y.meta_spend) : '-'}</td>
+                  <td className={`py-2 px-2 text-right ${y.google_spend > 0 ? 'text-amber-400' : 'text-slate-600'}`}>{y.google_spend > 0 ? fmt(y.google_spend) : '-'}</td>
+                  <td className={`py-2 px-2 text-right ${y.total_spend > 0 ? 'text-red-400 font-medium' : 'text-slate-600'}`}>{y.total_spend > 0 ? fmt(y.total_spend) : '-'}</td>
+                  <td className={`py-2 px-2 text-right font-bold ${y.roas_checkout > 10 ? 'text-emerald-400' : y.roas_checkout > 5 ? 'text-emerald-300' : y.roas_checkout > 0 ? 'text-amber-400' : 'text-slate-600'}`}>{y.roas_checkout > 0 ? `${y.roas_checkout.toFixed(1)}x` : '-'}</td>
+                  <td className={`py-2 px-2 text-right font-bold ${y.roas_crm > 3 ? 'text-purple-400' : y.roas_crm > 1 ? 'text-purple-300' : y.roas_crm > 0 ? 'text-amber-400' : 'text-slate-600'}`}>{y.roas_crm > 0 ? `${y.roas_crm.toFixed(2)}x` : '-'}</td>
+                  <td className="py-2 px-2 text-right text-red-400">{y.refunds > 0 ? fmt(y.refunds) : '-'}</td>
+                  <td className="py-2 px-2 text-right text-slate-300">{y.txns > 0 ? y.txns.toLocaleString('pt-BR') : '-'}</td>
+                  <td className="py-2 px-2 text-right text-pink-400">{y.leads_new > 0 ? y.leads_new.toLocaleString('pt-BR') : '-'}</td>
+                </tr>
+              ))}
+              {/* TOTALS ROW */}
+              <tr className="border-t-2 border-emerald-500/30 bg-emerald-500/5 font-bold">
+                <td className="py-2 px-2 text-emerald-400">TOTAL</td>
+                <td className="py-2 px-2 text-right text-emerald-400">{fmt(totalCheckout)}</td>
+                <td className="py-2 px-2 text-right text-purple-400">{fmt(totalCRM)}</td>
+                <td className="py-2 px-2 text-right text-blue-400">{fmt(totalMeta)}</td>
+                <td className="py-2 px-2 text-right text-amber-400">{fmt(totalGoogle)}</td>
+                <td className="py-2 px-2 text-right text-red-400">{fmt(totalAds)}</td>
+                <td className="py-2 px-2 text-right text-emerald-400">{totalAds > 0 ? `${(totalCheckout / totalAds).toFixed(1)}x` : '-'}</td>
+                <td className="py-2 px-2 text-right text-purple-400">{totalAds > 0 ? `${(totalCRM / totalAds).toFixed(2)}x` : '-'}</td>
+                <td className="py-2 px-2 text-right text-red-400">{fmt(totalRefunds)}</td>
+                <td className="py-2 px-2 text-right text-slate-300">{totalTxns.toLocaleString('pt-BR')}</td>
+                <td className="py-2 px-2 text-right text-pink-400">{totalLeads.toLocaleString('pt-BR')}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* DATA COVERAGE MATRIX - Critical transparency section */}
       {dataCoverage && (
         <div className="bg-slate-800/50 rounded-lg border border-amber-500/30 p-3 sm:p-5">
