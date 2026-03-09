@@ -16,7 +16,7 @@ export function KPICards({ kpis, year }: { kpis: any; year?: string }) {
     { label: 'Assinaturas', value: fmtN(kpis.total_subscriptions || 0), sub: 'Guru Digital', color: 'bg-orange-500/10 border-orange-500/30 text-orange-400' },
     { label: 'Reembolsos', value: fmt(kpis.total_refunds || 0), sub: `${refundPct.toFixed(1)}% da receita`, color: 'bg-red-500/10 border-red-500/30 text-red-400' },
     { label: 'ROAS Geral', value: `${roas.toFixed(2)}x`, sub: `${fmtN(kpis.total_meta_campaigns || 0)} campanhas Meta`, color: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400' },
-    { label: year && year !== 'all' ? `Periodo: ${year}` : 'Todos os Anos', value: kpis.data_range || '2021-2026', sub: '5 fontes de dados', color: 'bg-teal-500/10 border-teal-500/30 text-teal-400' },
+    { label: year && year !== 'all' ? `Periodo: ${year}` : 'Todos os Anos', value: typeof kpis.data_range === 'object' ? `${kpis.data_range?.start?.slice(0,7)} a ${kpis.data_range?.end?.slice(0,7)}` : (kpis.data_range || '2021-2026'), sub: '5 fontes de dados', color: 'bg-teal-500/10 border-teal-500/30 text-teal-400' },
   ]
 
   return (
