@@ -141,7 +141,7 @@ function App() {
         )}
         <KPICards kpis={yearKPIs} year={selectedYear} />
         <div className="mt-4 sm:mt-6">
-          {activeTab === 'overview' && <OverviewTab yearlySummary={data.yearly_summary} overview={data.overview} selectedYear={selectedYear} monthlyCombined={filtered.monthly_combined} cohort={data.cohort} ltv={data.ltv} dataSources={data.data_sources} />}
+          {activeTab === 'overview' && <OverviewTab yearlySummary={data.yearly_summary} overview={data.overview} selectedYear={selectedYear} monthlyCombined={filtered.monthly_combined} cohort={data.cohort} ltv={data.ltv} dataSources={data.data_sources} dataCoverage={data.data_coverage} crmDealAnalysis={data.crm_deal_analysis} />}
           {activeTab === 'receita' && <RevenueTab monthly={filtered.monthly_revenue} daily={filtered.daily_revenue} crmMonthly={filtered.crm_monthly_won} />}
           {activeTab === 'midia' && <MediaTab meta={filtered.meta_monthly} google={filtered.google_monthly} metaStats={data.meta_campaigns} googleCampaigns={data.google_campaigns} />}
           {activeTab === 'roas' && <ROASTab meta={filtered.meta_monthly} google={filtered.google_monthly} revenue={filtered.monthly_revenue} crmMonthly={filtered.crm_monthly_won} monthlyCombined={filtered.monthly_combined} />}
