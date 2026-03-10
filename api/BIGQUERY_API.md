@@ -265,6 +265,64 @@ curl http://localhost:3001/api/sync-status
 }
 ```
 
+### GET /api/unified-roas
+
+Monthly Guru revenue cross-referenced with ads conversions from traffic source table.
+
+```bash
+curl http://localhost:3001/api/unified-roas
+```
+
+```json
+{
+  "data": [
+    { "month": "2024-01", "guru_revenue": 2100000, "guru_transactions": 3500, "meta_conversions": 200, "google_conversions": 50 }
+  ],
+  "timestamp": "..."
+}
+```
+
+### GET /api/precision-check
+
+BRL scale validation — detects if values look like K instead of M.
+
+```bash
+curl http://localhost:3001/api/precision-check
+```
+
+```json
+{
+  "total": 101920676.39,
+  "avg_value": 340.95,
+  "min_value": 0.01,
+  "max_value": 49900.00,
+  "row_count": 299000,
+  "values_over_1M": 0,
+  "values_1K_to_1M": 850,
+  "values_under_1K": 298150,
+  "scale_check": "OK — values in correct BRL scale",
+  "timestamp": "..."
+}
+```
+
+### GET /api/year-comparison
+
+2024 vs 2025 side-by-side from same BigQuery dataset.
+
+```bash
+curl http://localhost:3001/api/year-comparison
+```
+
+```json
+{
+  "data": [
+    { "year": 2024, "month": 1, "revenue": 1800000, "transactions": 3200, "unique_customers": 2800 },
+    { "year": 2025, "month": 1, "revenue": 2100000, "transactions": 3800, "unique_customers": 3100 }
+  ],
+  "timestamp": "..."
+}
+```
+
 ---
 
 ## SQL Query Reference
