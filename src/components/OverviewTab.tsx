@@ -1,8 +1,16 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line, ComposedChart, PieChart, Pie, Cell } from 'recharts'
 import { useState } from 'react'
 
-const fmt = (v: number) => v >= 1e6 ? `R$${(v/1e6).toFixed(2)}M` : v >= 1e3 ? `R$${(v/1e3).toFixed(1)}K` : `R$${v.toFixed(0)}`
+const fmt = (v: number) => {
+  if (v >= 1e6) return `R$ ${(v/1e6).toFixed(2).replace('.', ',')}M`
+  if (v >= 1e3) return `R$ ${(v/1e3).toFixed(1).replace('.', ',')}K`
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
 const SourceBadge = ({ src }: { src: string }) => <span className="text-[8px] sm:text-[9px] text-slate-500 bg-slate-800 px-1 rounded ml-1">{src}</span>
+const VerifiedBadge = () => <span className="inline-flex items-center gap-0.5 text-[8px] sm:text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 ml-1.5 shrink-0">
+  <svg className="w-2 h-2" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+  BQ Verified
+</span>
 
 export function OverviewTab({ yearlySummary, overview, selectedYear, monthlyCombined, cohort, ltv, dataSources, dataCoverage, crmDealAnalysis }: {
   yearlySummary: any[]; overview: any; selectedYear: string; monthlyCombined: any[]; cohort: any[]; ltv: any; dataSources: any; dataCoverage?: any; crmDealAnalysis?: any
@@ -34,21 +42,21 @@ export function OverviewTab({ yearlySummary, overview, selectedYear, monthlyComb
     <div className="space-y-4 sm:space-y-6">
       {/* ANNUAL SUMMARY TABLE — Revenue, Spend, ROAS */}
       <div className="bg-slate-800/50 rounded-lg sm:rounded-xl border border-emerald-500/30 p-3 sm:p-5">
-        <h3 className="text-sm sm:text-lg font-semibold text-white mb-1">Resumo Anual — Receita (Guru), Investimento & ROAS</h3>
-        <p className="text-[9px] sm:text-xs text-slate-400 mb-1">Fonte de receita unica: Guru Digital (checkout). CRM = somente funil/deals (NAO soma na receita).</p>
-        <p className="text-[9px] sm:text-xs text-amber-400/70 mb-3">ROAS = Receita Guru / Investimento Ads. CRM Deals = metrica de funil separada.</p>
+        <h3 className="text-sm sm:text-lg font-semibold text-white mb-1 flex items-center flex-wrap">Resumo Anual — Receita, Investimento & ROAS<VerifiedBadge /></h3>
+        <p className="text-[9px] sm:text-xs text-slate-400 mb-1">Receita = Guru Digital (unica fonte financeira, de-duplicada). CRM* = valor de pipeline (informativo, NAO soma na receita).</p>
+        <p className="text-[9px] sm:text-xs text-amber-400/70 mb-3">ROAS Unificado = Receita Guru / (Meta + Google Ads). Colunas com * sao metricas de funil, nao financeiras.</p>
         <div className="overflow-x-auto -mx-3 sm:mx-0">
           <table className="w-full text-[10px] sm:text-xs min-w-[800px]">
             <thead>
               <tr className="text-slate-400 border-b border-slate-700">
                 <th className="text-left py-2 px-2">Ano</th>
-                <th className="text-right py-2 px-2">Checkout Gross</th>
-                <th className="text-right py-2 px-2">CRM Won</th>
+                <th className="text-right py-2 px-2 text-emerald-400/70">Receita (Guru)</th>
+                <th className="text-right py-2 px-2 text-purple-400/50">CRM Pipeline*</th>
                 <th className="text-right py-2 px-2">Meta Spend</th>
                 <th className="text-right py-2 px-2">Google Spend</th>
                 <th className="text-right py-2 px-2">Total Ads</th>
-                <th className="text-right py-2 px-2">ROAS Checkout</th>
-                <th className="text-right py-2 px-2">ROAS CRM</th>
+                <th className="text-right py-2 px-2 text-emerald-400/70">ROAS Unificado</th>
+                <th className="text-right py-2 px-2 text-purple-400/50">CRM/Ads*</th>
                 <th className="text-right py-2 px-2">Reembolsos</th>
                 <th className="text-right py-2 px-2">Txns</th>
                 <th className="text-right py-2 px-2">Leads</th>

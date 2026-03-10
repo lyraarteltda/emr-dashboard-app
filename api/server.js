@@ -191,6 +191,42 @@ app.get(
   })
 );
 
+// ── Unified ROAS (Guru revenue x Ads conversions) ────────────────────────────
+
+app.get(
+  '/api/unified-roas',
+  asyncHandler(async (_req, res) => {
+    const rows = await runQuery(Q.UNIFIED_ROAS);
+    res.json({ data: rows, timestamp: new Date().toISOString() });
+  })
+);
+
+// ── BRL Precision Check ──────────────────────────────────────────────────────
+
+app.get(
+  '/api/precision-check',
+  asyncHandler(async (_req, res) => {
+    const rows = await runQuery(Q.PRECISION_CHECK);
+    const d = rows[0] || {};
+    const scaleOk = d.total > 1e6; // if total > 1M, scale is correct
+    res.json({
+      ...d,
+      scale_check: scaleOk ? 'OK — values in correct BRL scale' : 'WARNING — values may be divided by 1000',
+      timestamp: new Date().toISOString(),
+    });
+  })
+);
+
+// ── 2024 vs 2025 comparison from same BQ dataset ────────────────────────────
+
+app.get(
+  '/api/year-comparison',
+  asyncHandler(async (_req, res) => {
+    const rows = await runQuery(Q.YEAR_COMPARISON);
+    res.json({ data: rows, timestamp: new Date().toISOString() });
+  })
+);
+
 // ── Sync status (table metadata) ────────────────────────────────────────────
 
 app.get(

@@ -183,6 +183,70 @@ const MATCH_RATE = `
     (SELECT COUNT(*) FROM crm_emails c LEFT JOIN guru_emails g ON g.email = c.email WHERE g.email IS NULL) AS crm_only
 `;
 
+// ── Unified ROAS (Meta+Google spend cross-referenced with Guru conversions) ──
+
+const UNIFIED_ROAS = `
+  WITH guru_monthly AS (
+    SELECT
+      FORMAT_TIMESTAMP('%Y-%m', data_conversao) AS month,
+      SUM(guru_revenue) AS revenue,
+      COUNT(*) AS transactions
+    FROM \`${DS}.eventos_conversoes\`
+    WHERE guru_revenue > 0
+    GROUP BY 1
+  ),
+  ads_monthly AS (
+    SELECT
+      FORMAT_TIMESTAMP('%Y-%m', data_conversao) AS month,
+      SUM(CASE WHEN traffic_source = 'facebook' OR traffic_source = 'meta' THEN 1 ELSE 0 END) AS meta_conversions,
+      SUM(CASE WHEN traffic_source = 'google' THEN 1 ELSE 0 END) AS google_conversions
+    FROM \`${DS}.eventos_conversoes_traffic_source\`
+    GROUP BY 1
+  )
+  SELECT
+    g.month,
+    g.revenue AS guru_revenue,
+    g.transactions AS guru_transactions,
+    a.meta_conversions,
+    a.google_conversions
+  FROM guru_monthly g
+  LEFT JOIN ads_monthly a ON g.month = a.month
+  ORDER BY g.month
+`;
+
+// ── BRL Precision Check — detects values that look like K instead of M ──
+
+const PRECISION_CHECK = `
+  SELECT
+    'eventos_conversoes' AS table_name,
+    SUM(guru_revenue) AS total,
+    AVG(guru_revenue) AS avg_value,
+    MIN(guru_revenue) AS min_value,
+    MAX(guru_revenue) AS max_value,
+    COUNT(*) AS row_count,
+    COUNTIF(guru_revenue > 1000000) AS values_over_1M,
+    COUNTIF(guru_revenue BETWEEN 1000 AND 999999) AS values_1K_to_1M,
+    COUNTIF(guru_revenue < 1000) AS values_under_1K
+  FROM \`${DS}.eventos_conversoes\`
+  WHERE guru_revenue > 0
+`;
+
+// ── 2024 vs 2025 side-by-side from same BQ dataset ──
+
+const YEAR_COMPARISON = `
+  SELECT
+    EXTRACT(YEAR FROM data_conversao) AS year,
+    EXTRACT(MONTH FROM data_conversao) AS month,
+    SUM(guru_revenue) AS revenue,
+    COUNT(*) AS transactions,
+    COUNT(DISTINCT email) AS unique_customers
+  FROM \`${DS}.eventos_conversoes\`
+  WHERE guru_revenue > 0
+    AND EXTRACT(YEAR FROM data_conversao) IN (2024, 2025)
+  GROUP BY 1, 2
+  ORDER BY 1, 2
+`;
+
 module.exports = {
   REVENUE_VALIDATION,
   FIRST_TOUCH_ATTRIBUTION,
@@ -193,4 +257,7 @@ module.exports = {
   COHORT_ANALYSIS,
   GURU_CRM_JOIN,
   MATCH_RATE,
+  UNIFIED_ROAS,
+  PRECISION_CHECK,
+  YEAR_COMPARISON,
 };

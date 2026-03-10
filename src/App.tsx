@@ -95,7 +95,6 @@ function App() {
     return {
       total_checkout_gross: ys.checkout_gross,
       total_checkout_net: ys.checkout_net,
-      total_crm_won_value: ys.crm_won_value,
       total_crm_deals_won: ys.crm_deals_won,
       total_refunds: ys.refunds,
       total_chargebacks: ys.chargebacks,
@@ -111,7 +110,6 @@ function App() {
       total_products: data.overview?.total_products || 0,
       data_range: data.overview?.data_range,
       roas_checkout: ys.roas_checkout,
-      roas_crm: ys.roas_crm,
       cac_per_lead: ys.cac_per_lead,
       cac_per_deal: ys.cac_per_deal,
       avg_deal_value: ys.avg_deal_value,
@@ -189,7 +187,7 @@ function App() {
           {activeTab === 'overview' && <OverviewTab yearlySummary={data.yearly_summary} overview={data.overview} selectedYear={selectedYear} monthlyCombined={filtered.monthly_combined} cohort={data.cohort} ltv={data.ltv} dataSources={data.data_sources} dataCoverage={data.data_coverage} crmDealAnalysis={data.crm_deal_analysis} />}
           {activeTab === 'receita' && <RevenueTab monthly={filtered.monthly_revenue} daily={filtered.daily_revenue} crmMonthly={filtered.crm_monthly_won} />}
           {activeTab === 'midia' && <MediaTab meta={filtered.meta_monthly} google={filtered.google_monthly} metaStats={data.meta_campaigns} googleCampaigns={data.google_campaigns} />}
-          {activeTab === 'roas' && <ROASTab meta={filtered.meta_monthly} google={filtered.google_monthly} revenue={filtered.monthly_revenue} crmMonthly={filtered.crm_monthly_won} monthlyCombined={filtered.monthly_combined} />}
+          {activeTab === 'roas' && <ROASTab meta={filtered.meta_monthly} google={filtered.google_monthly} revenue={filtered.monthly_revenue} monthlyCombined={filtered.monthly_combined} />}
           {activeTab === 'produtos' && <ProductsTab data={filtered.products} utmSources={data.utm_sources} utmCampaigns={data.utm_campaigns} />}
           {activeTab === 'geo' && <GeoTab data={filtered.states} />}
           {activeTab === 'crm' && <CRMTab daily={filtered.crm_daily} details={data.crm_details} />}

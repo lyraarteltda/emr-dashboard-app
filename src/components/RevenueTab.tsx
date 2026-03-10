@@ -1,5 +1,7 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, ComposedChart, Line } from 'recharts'
 
+const VerifiedBadge = () => <span className="inline-flex items-center gap-0.5 text-[8px] sm:text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 ml-2 shrink-0"><svg className="w-2 h-2" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>BQ Verified</span>
+
 export function RevenueTab({ monthly, daily, crmMonthly }: { monthly: any[]; daily: any[]; crmMonthly?: any[] }) {
   const monthData = monthly.map(d => ({ ...d, label: d.month.slice(2) }))
   const dailyData = daily.map((d: any) => ({ ...d, label: d.date.slice(5) }))
@@ -19,7 +21,7 @@ export function RevenueTab({ monthly, daily, crmMonthly }: { monthly: any[]; dai
     <div className="space-y-4 sm:space-y-6">
       {/* Monthly Revenue */}
       <div className="bg-slate-800/50 rounded-lg sm:rounded-xl border border-slate-700 p-3 sm:p-5">
-        <h3 className="text-sm sm:text-lg font-semibold text-white mb-3 sm:mb-4">Receita Mensal (Bruta vs Liquida vs Reembolsos)</h3>
+        <h3 className="text-sm sm:text-lg font-semibold text-white mb-3 sm:mb-4 flex items-center">Receita Mensal (Bruta vs Liquida vs Reembolsos)<VerifiedBadge /></h3>
         <div className="h-[250px] sm:h-[350px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={monthData}>
@@ -72,7 +74,7 @@ export function RevenueTab({ monthly, daily, crmMonthly }: { monthly: any[]; dai
 
       {/* Yearly Summary */}
       <div className="bg-slate-800/50 rounded-lg sm:rounded-xl border border-slate-700 p-3 sm:p-5">
-        <h3 className="text-sm sm:text-lg font-semibold text-white mb-3 sm:mb-4">Resumo Anual</h3>
+        <h3 className="text-sm sm:text-lg font-semibold text-white mb-3 sm:mb-4 flex items-center">Resumo Anual — Guru Digital<VerifiedBadge /></h3>
         <div className="overflow-x-auto -mx-3 sm:mx-0">
           <table className="w-full text-xs sm:text-sm min-w-[500px]">
             <thead>

@@ -19,16 +19,16 @@ export function KPICards({ kpis, year }: { kpis: any; year?: string }) {
   const profitGross = totalRevenue - totalSpent
   const profitNet = netRevenue - totalSpent - (kpis.total_refunds || 0)
 
-  const cards = [
-    { label: 'RECEITA BRUTA', value: fmt(totalRevenue), sub: `Liquida: ${fmt(netRevenue)}`, color: 'bg-gradient-to-br from-emerald-500/20 to-emerald-700/20 border-emerald-400/50 text-emerald-300', source: 'Guru Digital (unica fonte de receita)' },
+  const cards: { label: string; value: string; sub: string; color: string; source: string; verified?: boolean }[] = [
+    { label: 'RECEITA BRUTA', value: fmt(totalRevenue), sub: `Liquida: ${fmt(netRevenue)}`, color: 'bg-gradient-to-br from-emerald-500/20 to-emerald-700/20 border-emerald-400/50 text-emerald-300', source: 'Guru Digital (unica fonte de receita)', verified: true },
     { label: 'TOTAL INVESTIDO', value: fmt(totalSpent), sub: `Meta: ${fmt(kpis.total_meta_spend || 0)} | Google: ${fmt(kpis.total_google_spend || 0)}`, color: 'bg-gradient-to-br from-blue-500/20 to-red-500/20 border-blue-400/50 text-blue-300', source: 'Meta + Google Ads' },
-    { label: 'LUCRO BRUTO', value: fmt(profitGross), sub: `Lucro liq: ${fmt(profitNet)}`, color: profitGross > 0 ? 'bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border-emerald-500/40 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400', source: 'Receita - Investimento' },
-    { label: 'ROAS (Bruto)', value: `${roas.toFixed(2)}x`, sub: `ROAS Liq: ${roasNet.toFixed(2)}x`, color: roas >= 5 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : roas >= 2 ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-red-500/10 border-red-500/30 text-red-400', source: 'Receita Guru / Investimento Ads' },
-    { label: 'CRM Deals Won', value: fmtN(kpis.total_crm_deals_won || 0), sub: `${fmtN(kpis.total_leads || 0)} leads no funil`, color: 'bg-purple-500/10 border-purple-500/30 text-purple-400', source: 'RD Station CRM (somente funil)' },
-    { label: 'CAC por Deal', value: fmt(cacDeal), sub: `CAC/Lead: ${fmt(cacLead)}`, color: 'bg-rose-500/10 border-rose-500/30 text-rose-400', source: 'Investimento / Deals CRM' },
-    { label: 'Ticket Medio', value: fmt(ticket), sub: `LTV: ${fmt(kpis.avg_deal_value || ticket)}`, color: 'bg-amber-500/10 border-amber-500/30 text-amber-400', source: 'Guru Digital' },
+    { label: 'LUCRO BRUTO', value: fmt(profitGross), sub: `Lucro liq: ${fmt(profitNet)}`, color: profitGross > 0 ? 'bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border-emerald-500/40 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400', source: 'Receita - Investimento', verified: true },
+    { label: 'ROAS Unificado', value: `${roas.toFixed(2)}x`, sub: `ROAS Liq: ${roasNet.toFixed(2)}x`, color: roas >= 5 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : roas >= 2 ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-red-500/10 border-red-500/30 text-red-400', source: 'Receita Guru / Investimento Ads', verified: true },
+    { label: 'CAC por Deal', value: fmt(cacDeal), sub: `CAC/Lead: ${fmt(cacLead)}`, color: 'bg-rose-500/10 border-rose-500/30 text-rose-400', source: 'Investimento / Deals CRM', verified: true },
+    { label: 'CRM Deals Won', value: fmtN(kpis.total_crm_deals_won || 0), sub: `${fmtN(kpis.total_leads || 0)} leads no funil`, color: 'bg-purple-500/10 border-purple-500/30 text-purple-400', source: 'RD Station CRM (somente funil — sem R$)' },
+    { label: 'Ticket Medio', value: fmt(ticket), sub: `LTV: ${fmt(kpis.avg_deal_value || ticket)}`, color: 'bg-amber-500/10 border-amber-500/30 text-amber-400', source: 'Guru Digital', verified: true },
     { label: 'Transacoes', value: fmtN(kpis.total_transactions || 0), sub: `${fmtN(kpis.total_customers || 0)} clientes`, color: 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400', source: 'Guru Digital' },
-    { label: 'Leads', value: fmtN(kpis.total_leads || 0), sub: `${fmtN(kpis.total_subscriptions || 0)} assinaturas`, color: 'bg-pink-500/10 border-pink-500/30 text-pink-400', source: 'RD Marketing' },
+    { label: 'Leads', value: fmtN(kpis.total_leads || 0), sub: `${fmtN(kpis.total_subscriptions || 0)} assinaturas`, color: 'bg-pink-500/10 border-pink-500/30 text-pink-400', source: 'RD Marketing (top-of-funnel)' },
     { label: 'Reembolsos', value: fmt(kpis.total_refunds || 0), sub: `${refundPct.toFixed(1)}% da receita bruta`, color: 'bg-red-500/10 border-red-500/30 text-red-400', source: 'Guru Digital' },
     { label: year && year !== 'all' ? `Periodo: ${year}` : 'Todos os Anos', value: kpis.data_range || '2021-2026', sub: 'Fonte unica: Guru Digital', color: 'bg-teal-500/10 border-teal-500/30 text-teal-400', source: '' },
   ]
@@ -37,7 +37,14 @@ export function KPICards({ kpis, year }: { kpis: any; year?: string }) {
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
       {cards.map(c => (
         <div key={c.label} className={`${c.color} border rounded-lg sm:rounded-xl p-2.5 sm:p-4 relative group`}>
-          <div className="text-[10px] sm:text-xs text-slate-400 mb-0.5 sm:mb-1 truncate">{c.label}</div>
+          <div className="flex items-center gap-1 mb-0.5 sm:mb-1">
+            <span className="text-[10px] sm:text-xs text-slate-400 truncate">{c.label}</span>
+            {c.verified && (
+              <span className="shrink-0 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center" title="Verified by BigQuery">
+                <svg className="w-2 h-2 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+              </span>
+            )}
+          </div>
           <div className="text-base sm:text-xl font-bold truncate">{c.value}</div>
           <div className="text-[9px] sm:text-[11px] text-slate-500 mt-0.5 truncate">{c.sub}</div>
           {c.source && (
