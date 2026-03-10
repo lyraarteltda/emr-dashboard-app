@@ -34,8 +34,9 @@ export function OverviewTab({ yearlySummary, overview, selectedYear, monthlyComb
     <div className="space-y-4 sm:space-y-6">
       {/* ANNUAL SUMMARY TABLE — Revenue, Spend, ROAS */}
       <div className="bg-slate-800/50 rounded-lg sm:rounded-xl border border-emerald-500/30 p-3 sm:p-5">
-        <h3 className="text-sm sm:text-lg font-semibold text-white mb-1">Resumo Anual — Receita, Investimento & ROAS</h3>
-        <p className="text-[9px] sm:text-xs text-slate-400 mb-3">Visao consolidada de todas as fontes por ano</p>
+        <h3 className="text-sm sm:text-lg font-semibold text-white mb-1">Resumo Anual — Receita (Guru), Investimento & ROAS</h3>
+        <p className="text-[9px] sm:text-xs text-slate-400 mb-1">Fonte de receita unica: Guru Digital (checkout). CRM = somente funil/deals (NAO soma na receita).</p>
+        <p className="text-[9px] sm:text-xs text-amber-400/70 mb-3">ROAS = Receita Guru / Investimento Ads. CRM Deals = metrica de funil separada.</p>
         <div className="overflow-x-auto -mx-3 sm:mx-0">
           <table className="w-full text-[10px] sm:text-xs min-w-[800px]">
             <thead>
@@ -301,11 +302,11 @@ export function OverviewTab({ yearlySummary, overview, selectedYear, monthlyComb
 
       {selectedYear === 'all' ? (
         <>
-          {/* DUAL REVENUE: CRM Won Value vs Checkout Revenue */}
+          {/* REVENUE (Guru) vs CRM FUNNEL vs AD SPEND */}
           <div className="bg-slate-800/50 rounded-lg sm:rounded-xl border border-slate-700 p-3 sm:p-5">
-            <h3 className="text-sm sm:text-lg font-semibold text-white mb-1">Receita por Ano: CRM Won Value vs Checkout</h3>
-            <p className="text-[9px] sm:text-xs text-slate-400 mb-1">CRM Won Value = valor total do contrato (implementado Nov/2025) | Checkout = pagamentos processados (Guru Digital)</p>
-            <p className="text-[9px] sm:text-xs text-amber-400/80 mb-3">2021-2024: somente Checkout disponivel | 2025-2026: ambas as metricas</p>
+            <h3 className="text-sm sm:text-lg font-semibold text-white mb-1">Receita (Guru) vs CRM Deals vs Investimento por Ano</h3>
+            <p className="text-[9px] sm:text-xs text-slate-400 mb-1">Checkout (Guru) = RECEITA REAL. CRM Won Value = valor de contratos no funil (NAO e receita — e metrica de pipeline).</p>
+            <p className="text-[9px] sm:text-xs text-amber-400/80 mb-3">CRM e Guru medem coisas diferentes: CRM = valor de contrato | Guru = pagamentos processados</p>
             <div className="h-[280px] sm:h-[380px]">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={yearData}>
@@ -315,8 +316,8 @@ export function OverviewTab({ yearlySummary, overview, selectedYear, monthlyComb
                   <YAxis yAxisId="right" orientation="right" stroke="#10b981" tick={{ fontSize: 9 }} tickFormatter={(v: any) => `R$${(v/1e3).toFixed(0)}K`} />
                   <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }} formatter={(v: any, name: any) => [`R$${Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, name]} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Bar yAxisId="left" dataKey="crm_won_value" name="CRM Won Value (RD CRM)" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-                  <Bar yAxisId="right" dataKey="checkout_gross" name="Checkout Gross (Guru)" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  <Bar yAxisId="left" dataKey="crm_won_value" name="CRM Pipeline (funil, nao receita)" fill="#8b5cf6" radius={[4, 4, 0, 0]} opacity={0.5} />
+                  <Bar yAxisId="right" dataKey="checkout_gross" name="RECEITA (Guru Digital)" fill="#10b981" radius={[4, 4, 0, 0]} />
                   <Line yAxisId="left" type="monotone" dataKey="total_ad_spend" name="Ad Spend (Meta+Google)" stroke="#ef4444" strokeWidth={2} dot={{ r: 4 }} />
                 </ComposedChart>
               </ResponsiveContainer>
@@ -325,7 +326,7 @@ export function OverviewTab({ yearlySummary, overview, selectedYear, monthlyComb
 
           {/* ROAS Real + CAC + LTV Trends */}
           <div className="bg-slate-800/50 rounded-lg sm:rounded-xl border border-slate-700 p-3 sm:p-5">
-            <h3 className="text-sm sm:text-lg font-semibold text-white mb-3">ROAS Real (CRM), CAC & LTV por Ano</h3>
+            <h3 className="text-sm sm:text-lg font-semibold text-white mb-3">ROAS (Guru Revenue / Ads), CAC & LTV por Ano</h3>
             <div className="h-[250px] sm:h-[320px]">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={yearData.filter((y: any) => y.total_ad_spend > 0)}>

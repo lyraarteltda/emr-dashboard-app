@@ -6,11 +6,13 @@ export function CRMTab({ daily, details }: { daily: any[]; details: any }) {
   const sorted = [...daily].sort((a: any, b: any) => a.date.localeCompare(b.date))
   const chartData = sorted.map((d: any) => ({ ...d, label: d.date.slice(5) }))
 
-  const totalWon = daily.reduce((s: number, d: any) => s + (d.won_value || 0), 0)
+  // CRM tracks FUNNEL stages only — NOT financial revenue (Guru Digital is the revenue source)
+  const totalPipelineValue = daily.reduce((s: number, d: any) => s + (d.won_value || 0), 0)
   const totalDeals = daily.reduce((s: number, d: any) => s + (d.won_count || 0), 0)
   const totalNew = daily.reduce((s: number, d: any) => s + (d.new_deals || 0), 0)
   const totalLost = daily.reduce((s: number, d: any) => s + (d.lost_count || 0), 0)
-  const avgTicket = totalDeals > 0 ? totalWon / totalDeals : 0
+  const avgDealValue = totalDeals > 0 ? totalPipelineValue / totalDeals : 0
+  const winRate = (totalNew > 0 ? (totalDeals / totalNew * 100) : 0)
 
   const stageData = details?.by_stage || []
   const pipelineData = details?.by_pipeline || []
@@ -20,21 +22,23 @@ export function CRMTab({ daily, details }: { daily: any[]; details: any }) {
     <div className="space-y-4 sm:space-y-6">
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
         {[
-          { label: 'Total Won', value: `R$${(totalWon/1e6).toFixed(2)}M`, color: 'border-emerald-500/30 text-emerald-400' },
-          { label: 'Deals Won', value: totalDeals.toLocaleString('pt-BR'), color: 'border-blue-500/30 text-blue-400' },
-          { label: 'Novos Deals', value: totalNew.toLocaleString('pt-BR'), color: 'border-purple-500/30 text-purple-400' },
-          { label: 'Lost', value: totalLost.toLocaleString('pt-BR'), color: 'border-red-500/30 text-red-400' },
-          { label: 'Ticket Medio', value: `R$${avgTicket.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, color: 'border-amber-500/30 text-amber-400' },
+          { label: 'Pipeline Value', value: `R$${(totalPipelineValue/1e6).toFixed(2)}M`, sub: 'Valor de contratos (nao e receita)', color: 'border-purple-500/30 text-purple-400' },
+          { label: 'Deals Won', value: totalDeals.toLocaleString('pt-BR'), sub: `Win rate: ${winRate.toFixed(1)}%`, color: 'border-emerald-500/30 text-emerald-400' },
+          { label: 'Novos Deals', value: totalNew.toLocaleString('pt-BR'), sub: 'Entradas no funil', color: 'border-blue-500/30 text-blue-400' },
+          { label: 'Lost', value: totalLost.toLocaleString('pt-BR'), sub: 'Deals perdidos', color: 'border-red-500/30 text-red-400' },
+          { label: 'Valor Medio Deal', value: `R$${avgDealValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, sub: 'Pipeline (nao ticket checkout)', color: 'border-amber-500/30 text-amber-400' },
         ].map(c => (
           <div key={c.label} className={`bg-slate-800/50 rounded-lg border ${c.color} p-2.5 sm:p-4`}>
             <div className="text-[10px] sm:text-xs text-slate-400">{c.label}</div>
             <div className={`text-sm sm:text-xl font-bold`}>{c.value}</div>
+            {c.sub && <div className="text-[8px] sm:text-[9px] text-slate-500 mt-0.5">{c.sub}</div>}
           </div>
         ))}
       </div>
 
       <div className="bg-slate-800/50 rounded-lg sm:rounded-xl border border-slate-700 p-3 sm:p-5">
-        <h3 className="text-sm sm:text-lg font-semibold text-white mb-3">Valor Won por Dia</h3>
+        <h3 className="text-sm sm:text-lg font-semibold text-white mb-1">Pipeline Value por Dia</h3>
+        <p className="text-[9px] sm:text-xs text-slate-500 mb-3">Valor de contratos no funil CRM — NAO representa receita real (fonte de receita: Guru Digital)</p>
         <div className="h-[250px] sm:h-[350px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>

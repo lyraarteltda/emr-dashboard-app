@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import data from './data.json'
 import { KPICards } from './components/KPICards'
 import { RevenueTab } from './components/RevenueTab'
@@ -12,7 +12,12 @@ import { LeadsTab } from './components/LeadsTab'
 import { MarketingTab } from './components/MarketingTab'
 import { PaymentsTab } from './components/PaymentsTab'
 import { OverviewTab } from './components/OverviewTab'
+import { DataHealthTab } from './components/DataHealthTab'
+import { AttributionTab } from './components/AttributionTab'
+import { MRRChurnTab } from './components/MRRChurnTab'
 import { DebugTab } from './components/DebugTab'
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 const tabs = [
   { id: 'overview', label: 'Overview' },
@@ -21,11 +26,14 @@ const tabs = [
   { id: 'roas', label: 'ROAS' },
   { id: 'produtos', label: 'Produtos' },
   { id: 'geo', label: 'Geografia' },
-  { id: 'crm', label: 'CRM' },
+  { id: 'crm', label: 'CRM (Funil)' },
   { id: 'clientes', label: 'Clientes' },
   { id: 'leads', label: 'Leads' },
   { id: 'marketing', label: 'Marketing' },
   { id: 'pagamentos', label: 'Pagamentos' },
+  { id: 'attribution', label: 'Atribuicao' },
+  { id: 'mrr', label: 'MRR & Churn' },
+  { id: 'datahealth', label: 'Data Health' },
   { id: 'debug', label: 'Debug' },
 ]
 
@@ -34,10 +42,35 @@ function filterByYear(arr: any[], year: string) {
   return arr.filter((d: any) => d.year === year || d.month?.startsWith(year) || d.date?.startsWith(year))
 }
 
+async function fetchAPI(endpoint: string) {
+  try {
+    const res = await fetch(`${API_BASE}${endpoint}`)
+    if (!res.ok) return null
+    return await res.json()
+  } catch { return null }
+}
+
 function App() {
   const [activeTab, setActiveTab] = useState('overview')
   const [selectedYear, setSelectedYear] = useState('all')
   const years = ['all', ...(data.years || [])]
+
+  // BigQuery API state
+  const [bqHealth, setBqHealth] = useState<any>(null)
+  const [bqSyncStatus, setBqSyncStatus] = useState<any>(null)
+  const [bqValidation, setBqValidation] = useState<any>(null)
+  const [bqAttribution, setBqAttribution] = useState<any>(null)
+  const [bqMrr, setBqMrr] = useState<any>(null)
+  const [bqChurn, setBqChurn] = useState<any>(null)
+
+  // Fetch BigQuery data on mount
+  useEffect(() => {
+    fetchAPI('/api/health').then(setBqHealth)
+    fetchAPI('/api/sync-status').then(setBqSyncStatus)
+    fetchAPI('/api/revenue/validate').then(setBqValidation)
+    fetchAPI('/api/attribution').then(setBqAttribution)
+    fetchAPI('/api/mrr').then(d => { setBqMrr(d?.mrr || null); setBqChurn(d?.churn || null) })
+  }, [])
 
   const filtered = useMemo(() => ({
     monthly_revenue: filterByYear(data.monthly_revenue, selectedYear),
@@ -50,7 +83,6 @@ function App() {
     refund_monthly: filterByYear(data.refund_details?.monthly || [], selectedYear),
     customers_monthly: filterByYear(data.customers?.monthly_new || [], selectedYear),
     leads_monthly: filterByYear(data.leads?.monthly_new || [], selectedYear),
-    subs_monthly: filterByYear(data.subscriptions?.monthly_new || [], selectedYear),
     products: selectedYear === 'all' ? data.top_products : (data.products_by_year?.[selectedYear] || []),
     states: selectedYear === 'all' ? data.revenue_by_state : (data.state_by_year?.[selectedYear] || []),
     payments: selectedYear === 'all' ? data.payment_methods : (data.payments_by_year?.[selectedYear] || []),
@@ -87,6 +119,9 @@ function App() {
     }
   }, [selectedYear])
 
+  // Revenue validation warning
+  const validationMismatch = bqValidation?.status === 'mismatch'
+
   return (
     <div className="min-h-screen bg-slate-900">
       <header className="bg-slate-800/80 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
@@ -98,10 +133,16 @@ function App() {
                 <span className="text-emerald-400 ml-1 sm:ml-2 text-sm sm:text-lg font-medium">Eu Medico Residente</span>
               </h1>
               <p className="text-slate-400 text-[10px] sm:text-sm mt-0.5">
-                5 fontes | 30 CSVs | ~2M registros | Hover nos KPIs para ver a fonte
+                Receita: Guru Digital (unica fonte) | CRM: Funil apenas | BigQuery: Single Source of Truth
               </p>
             </div>
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              {bqHealth?.connected && (
+                <span className="text-[9px] sm:text-xs text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">BQ Connected</span>
+              )}
+              {validationMismatch && (
+                <span className="text-[9px] sm:text-xs text-red-400 bg-red-500/10 px-2 py-1 rounded border border-red-500/20 animate-pulse">Data Mismatch</span>
+              )}
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
@@ -137,6 +178,12 @@ function App() {
             Filtrando: <strong>{selectedYear}</strong> — mostrando apenas dados deste ano
           </div>
         )}
+        {validationMismatch && (
+          <div className="mb-3 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs sm:text-sm">
+            <strong>Data Warning:</strong> SUM(guru_revenue) no BigQuery ({bqValidation?.bq_total}) difere do dashboard ({bqValidation?.dashboard_total}).
+            Delta: {bqValidation?.delta} ({bqValidation?.delta_pct}%). Verifique a tab Data Health.
+          </div>
+        )}
         <KPICards kpis={yearKPIs} year={selectedYear} />
         <div className="mt-4 sm:mt-6">
           {activeTab === 'overview' && <OverviewTab yearlySummary={data.yearly_summary} overview={data.overview} selectedYear={selectedYear} monthlyCombined={filtered.monthly_combined} cohort={data.cohort} ltv={data.ltv} dataSources={data.data_sources} dataCoverage={data.data_coverage} crmDealAnalysis={data.crm_deal_analysis} />}
@@ -150,12 +197,15 @@ function App() {
           {activeTab === 'leads' && <LeadsTab data={{ ...data.leads, monthly_new: filtered.leads_monthly }} />}
           {activeTab === 'marketing' && <MarketingTab conversions={data.marketing_conversions} campaigns={data.meta_campaigns} />}
           {activeTab === 'pagamentos' && <PaymentsTab methods={filtered.payments} installments={data.installments} />}
+          {activeTab === 'attribution' && <AttributionTab attribution={bqAttribution} />}
+          {activeTab === 'mrr' && <MRRChurnTab mrr={bqMrr} churn={bqChurn} />}
+          {activeTab === 'datahealth' && <DataHealthTab health={bqHealth} syncStatus={bqSyncStatus} validation={bqValidation} />}
           {activeTab === 'debug' && <DebugTab data={data} />}
         </div>
       </main>
 
       <footer className="text-center py-4 text-slate-600 text-[10px] sm:text-xs border-t border-slate-800 px-4">
-        EMR Dashboard v5.0 | Maestros da IA | Dual-Revenue (CRM + Checkout) | Guru + Meta + Google + RD Station CRM + RD Station Marketing
+        EMR Dashboard v6.0 | Maestros da IA | Revenue: Guru Digital (unica fonte) | CRM: Funil | BigQuery SSOT
       </footer>
     </div>
   )
