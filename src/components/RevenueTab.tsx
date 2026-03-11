@@ -39,7 +39,7 @@ export function RevenueTab({ monthly, daily, crmMonthly }: { monthly: any[]; dai
 
       {/* Daily Revenue (last 180 days) */}
       <div className="bg-slate-800/50 rounded-lg sm:rounded-xl border border-slate-700 p-3 sm:p-5">
-        <h3 className="text-sm sm:text-lg font-semibold text-white mb-3 sm:mb-4">Receita Diaria (Ultimos 180 dias)</h3>
+        <h3 className="text-sm sm:text-lg font-semibold text-white mb-3 sm:mb-4">Receita Diaria ({daily.length} dias)</h3>
         <div className="h-[200px] sm:h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={dailyData}>

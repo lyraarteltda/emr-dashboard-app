@@ -7,6 +7,15 @@ Handles BRL number parsing, CRM revenue deduplication, account filtering,
 and precision validation.
 
 Usage: python3 scripts/preprocess_data.py
+
+BigQuery Daily Revenue Source:
+  - Project: datawarehouse-emr
+  - Table: bases_unificadas.base_churn_consolidada
+  - Column: faturamento_ajustado (filtered to Venda rows only)
+  - Aggregation: SUM(faturamento_ajustado) GROUP BY DATE(data_ajustada), daily
+  - Fields: date, year, gross, net, refunds, chargebacks, txns
+  - Range: 2022-01-01 to present (~1,499 records as of 2026-03-10)
+  - Total: R$160.9M gross, 31,814 transactions
 """
 
 import json

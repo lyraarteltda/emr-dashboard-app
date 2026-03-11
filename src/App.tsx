@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import data from './data.json'
+import { DateRangePicker } from './components/DateRangePicker'
 import { KPICards } from './components/KPICards'
 import { RevenueTab } from './components/RevenueTab'
 import { MediaTab } from './components/MediaTab'
@@ -37,9 +38,12 @@ const tabs = [
   { id: 'debug', label: 'Debug' },
 ]
 
-function filterByYear(arr: any[], year: string) {
-  if (year === 'all') return arr
-  return arr.filter((d: any) => d.year === year || d.month?.startsWith(year) || d.date?.startsWith(year))
+function filterByDateRange(arr: any[], range: { start: string; end: string } | null) {
+  if (!range) return arr
+  return arr.filter((d: any) => {
+    const key = d.date || d.month
+    return key && key >= range.start && key <= range.end
+  })
 }
 
 async function fetchAPI(endpoint: string) {
@@ -52,8 +56,13 @@ async function fetchAPI(endpoint: string) {
 
 function App() {
   const [activeTab, setActiveTab] = useState('overview')
-  const [selectedYear, setSelectedYear] = useState('all')
-  const years = ['all', ...(data.years || [])]
+  const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(() => {
+    const today = new Date().toISOString().slice(0, 10)
+    const d30 = new Date(); d30.setDate(d30.getDate() - 30)
+    return { start: d30.toISOString().slice(0, 10), end: today }
+  })
+  const minDate = data.daily_revenue?.[0]?.date || '2022-01-01'
+  const maxDate = data.daily_revenue?.[data.daily_revenue.length - 1]?.date || '2026-12-31'
 
   // BigQuery API state
   const [bqHealth, setBqHealth] = useState<any>(null)
@@ -72,50 +81,65 @@ function App() {
     fetchAPI('/api/mrr').then(d => { setBqMrr(d?.mrr || null); setBqChurn(d?.churn || null) })
   }, [])
 
+  const selectedYear = dateRange ? 'all' : 'all'
+
   const filtered = useMemo(() => ({
-    monthly_revenue: filterByYear(data.monthly_revenue, selectedYear),
-    monthly_combined: filterByYear(data.monthly_combined, selectedYear),
-    daily_revenue: filterByYear(data.daily_revenue, selectedYear),
-    meta_monthly: filterByYear(data.meta_monthly, selectedYear),
-    google_monthly: filterByYear(data.google_monthly, selectedYear),
-    crm_daily: filterByYear(data.crm_daily, selectedYear),
-    crm_monthly_won: filterByYear(data.crm_monthly_won, selectedYear),
-    refund_monthly: filterByYear(data.refund_details?.monthly || [], selectedYear),
-    customers_monthly: filterByYear(data.customers?.monthly_new || [], selectedYear),
-    leads_monthly: filterByYear(data.leads?.monthly_new || [], selectedYear),
-    products: selectedYear === 'all' ? data.top_products : (data.products_by_year?.[selectedYear] || []),
-    states: selectedYear === 'all' ? data.revenue_by_state : (data.state_by_year?.[selectedYear] || []),
-    payments: selectedYear === 'all' ? data.payment_methods : (data.payments_by_year?.[selectedYear] || []),
-  }), [selectedYear])
+    monthly_revenue: filterByDateRange(data.monthly_revenue, dateRange),
+    monthly_combined: filterByDateRange(data.monthly_combined, dateRange),
+    daily_revenue: filterByDateRange(data.daily_revenue, dateRange),
+    meta_monthly: filterByDateRange(data.meta_monthly, dateRange),
+    google_monthly: filterByDateRange(data.google_monthly, dateRange),
+    crm_daily: filterByDateRange(data.crm_daily, dateRange),
+    crm_monthly_won: filterByDateRange(data.crm_monthly_won, dateRange),
+    refund_monthly: filterByDateRange(data.refund_details?.monthly || [], dateRange),
+    customers_monthly: filterByDateRange(data.customers?.monthly_new || [], dateRange),
+    leads_monthly: filterByDateRange(data.leads?.monthly_new || [], dateRange),
+    products: !dateRange ? data.top_products : data.top_products,
+    states: !dateRange ? data.revenue_by_state : data.revenue_by_state,
+    payments: !dateRange ? data.payment_methods : data.payment_methods,
+  }), [dateRange])
 
   const yearKPIs = useMemo(() => {
-    if (selectedYear === 'all') return data.overview
-    const ys = data.yearly_summary?.find((y: any) => y.year === selectedYear)
-    if (!ys) return data.overview
+    if (!dateRange) return data.overview
+    // Recompute KPIs from filtered daily/monthly data
+    const rev = filtered.monthly_revenue
+    const daily = filtered.daily_revenue
+    const meta = filtered.meta_monthly
+    const google = filtered.google_monthly
+    const gross = rev.reduce((s: number, d: any) => s + (d.gross || 0), 0)
+    const net = rev.reduce((s: number, d: any) => s + (d.net || 0), 0)
+    const refunds = rev.reduce((s: number, d: any) => s + (d.refunds || 0), 0)
+    const chargebacks = rev.reduce((s: number, d: any) => s + (d.chargebacks || 0), 0)
+    const txns = rev.reduce((s: number, d: any) => s + (d.txns || 0), 0)
+    const metaSpend = meta.reduce((s: number, d: any) => s + (d.spend || 0), 0)
+    const googleSpend = google.reduce((s: number, d: any) => s + (d.spend || 0), 0)
+    const totalSpend = metaSpend + googleSpend
+    const customers = filtered.customers_monthly.reduce((s: number, d: any) => s + (d.count || d.new_customers || 0), 0)
+    const leads = filtered.leads_monthly.reduce((s: number, d: any) => s + (d.count || d.new_leads || 0), 0)
     return {
-      total_checkout_gross: ys.checkout_gross,
-      total_checkout_net: ys.checkout_net,
-      total_crm_deals_won: ys.crm_deals_won,
-      total_refunds: ys.refunds,
-      total_chargebacks: ys.chargebacks,
-      total_transactions: ys.txns,
-      total_customers: ys.customers_new,
-      total_leads: ys.leads_new,
-      total_subscriptions: ys.subscriptions_new,
-      total_meta_spend: ys.meta_spend,
-      total_google_spend: ys.google_spend,
-      total_ad_spend: ys.total_ad_spend,
+      total_checkout_gross: gross,
+      total_checkout_net: net,
+      total_crm_deals_won: data.overview?.total_crm_deals_won || 0,
+      total_refunds: refunds,
+      total_chargebacks: chargebacks,
+      total_transactions: txns,
+      total_customers: customers || data.overview?.total_customers || 0,
+      total_leads: leads || data.overview?.total_leads || 0,
+      total_subscriptions: data.overview?.total_subscriptions || 0,
+      total_meta_spend: metaSpend,
+      total_google_spend: googleSpend,
+      total_ad_spend: totalSpend,
       total_meta_campaigns: data.overview?.total_meta_campaigns || 0,
       total_google_campaigns: data.overview?.total_google_campaigns || 0,
       total_products: data.overview?.total_products || 0,
-      data_range: data.overview?.data_range,
-      roas_checkout: ys.roas_checkout,
-      cac_per_lead: ys.cac_per_lead,
-      cac_per_deal: ys.cac_per_deal,
-      avg_deal_value: ys.avg_deal_value,
-      ltv_checkout: ys.ticket_checkout,
+      data_range: `${dateRange.start} a ${dateRange.end}`,
+      roas_checkout: totalSpend > 0 ? gross / totalSpend : 0,
+      cac_per_lead: leads > 0 ? totalSpend / leads : 0,
+      cac_per_deal: 0,
+      avg_deal_value: txns > 0 ? gross / txns : 0,
+      ltv_checkout: txns > 0 ? gross / txns : 0,
     }
-  }, [selectedYear])
+  }, [dateRange, filtered])
 
   // Revenue validation warning
   const validationMismatch = bqValidation?.status === 'mismatch'
@@ -141,15 +165,12 @@ function App() {
               {validationMismatch && (
                 <span className="text-[9px] sm:text-xs text-red-400 bg-red-500/10 px-2 py-1 rounded border border-red-500/20 animate-pulse">Data Mismatch</span>
               )}
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-                className="bg-slate-700 border border-slate-600 text-white rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:border-transparent cursor-pointer"
-              >
-                {years.map(y => (
-                  <option key={y} value={y}>{y === 'all' ? 'Todos os Anos' : y}</option>
-                ))}
-              </select>
+              <DateRangePicker
+                value={dateRange}
+                onChange={setDateRange}
+                minDate={minDate}
+                maxDate={maxDate}
+              />
             </div>
           </div>
           <nav className="flex gap-1 overflow-x-auto pb-1 -mx-1 px-1">
@@ -171,9 +192,10 @@ function App() {
       </header>
 
       <main className="max-w-[1400px] mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
-        {selectedYear !== 'all' && (
-          <div className="mb-3 px-3 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-xs sm:text-sm">
-            Filtrando: <strong>{selectedYear}</strong> — mostrando apenas dados deste ano
+        {dateRange && (
+          <div className="mb-3 px-3 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-xs sm:text-sm flex items-center justify-between">
+            <span>Filtrando: <strong>{dateRange.start}</strong> a <strong>{dateRange.end}</strong></span>
+            <button onClick={() => setDateRange(null)} className="text-slate-400 hover:text-white text-xs underline">Limpar</button>
           </div>
         )}
         {validationMismatch && (
