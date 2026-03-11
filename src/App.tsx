@@ -42,8 +42,30 @@ function filterByDateRange(arr: any[], range: { start: string; end: string } | n
   if (!range) return arr
   return arr.filter((d: any) => {
     const key = d.date || d.month
-    return key && key >= range.start && key <= range.end
+    if (!key) return false
+    // For monthly keys (YYYY-MM), compare against YYYY-MM portion of range
+    if (key.length === 7) {
+      const startMonth = range.start.slice(0, 7)
+      const endMonth = range.end.slice(0, 7)
+      return key >= startMonth && key <= endMonth
+    }
+    return key >= range.start && key <= range.end
   })
+}
+
+// Aggregate daily_revenue into monthly buckets on-the-fly for charts
+function groupDailyByMonth(daily: any[]) {
+  const months: Record<string, { month: string; gross: number; net: number; refunds: number; chargebacks: number; txns: number }> = {}
+  for (const d of daily) {
+    const m = d.date.slice(0, 7)
+    if (!months[m]) months[m] = { month: m, gross: 0, net: 0, refunds: 0, chargebacks: 0, txns: 0 }
+    months[m].gross += d.gross || 0
+    months[m].net += d.net || 0
+    months[m].refunds += d.refunds || 0
+    months[m].chargebacks += d.chargebacks || 0
+    months[m].txns += d.txns || 0
+  }
+  return Object.values(months).sort((a, b) => a.month.localeCompare(b.month))
 }
 
 async function fetchAPI(endpoint: string) {
@@ -99,18 +121,23 @@ function App() {
     payments: !dateRange ? data.payment_methods : data.payment_methods,
   }), [dateRange])
 
+  // Daily-derived monthly data for charts (only when date range is active)
+  const dailyMonthly = useMemo(() => {
+    if (!dateRange) return null
+    return groupDailyByMonth(filtered.daily_revenue)
+  }, [dateRange, filtered.daily_revenue])
+
   const yearKPIs = useMemo(() => {
     if (!dateRange) return data.overview
-    // Recompute KPIs from filtered daily/monthly data
-    const rev = filtered.monthly_revenue
+    // ALWAYS compute revenue KPIs from daily_revenue for accurate day-level filtering
     const daily = filtered.daily_revenue
     const meta = filtered.meta_monthly
     const google = filtered.google_monthly
-    const gross = rev.reduce((s: number, d: any) => s + (d.gross || 0), 0)
-    const net = rev.reduce((s: number, d: any) => s + (d.net || 0), 0)
-    const refunds = rev.reduce((s: number, d: any) => s + (d.refunds || 0), 0)
-    const chargebacks = rev.reduce((s: number, d: any) => s + (d.chargebacks || 0), 0)
-    const txns = rev.reduce((s: number, d: any) => s + (d.txns || 0), 0)
+    const gross = daily.reduce((s: number, d: any) => s + (d.gross || 0), 0)
+    const net = daily.reduce((s: number, d: any) => s + (d.net || 0), 0)
+    const refunds = daily.reduce((s: number, d: any) => s + (d.refunds || 0), 0)
+    const chargebacks = daily.reduce((s: number, d: any) => s + (d.chargebacks || 0), 0)
+    const txns = daily.reduce((s: number, d: any) => s + (d.txns || 0), 0)
     const metaSpend = meta.reduce((s: number, d: any) => s + (d.spend || 0), 0)
     const googleSpend = google.reduce((s: number, d: any) => s + (d.spend || 0), 0)
     const totalSpend = metaSpend + googleSpend
@@ -132,7 +159,8 @@ function App() {
       total_meta_campaigns: data.overview?.total_meta_campaigns || 0,
       total_google_campaigns: data.overview?.total_google_campaigns || 0,
       total_products: data.overview?.total_products || 0,
-      data_range: `${dateRange.start} a ${dateRange.end}`,
+      day_count: daily.length,
+      data_range: `${dateRange.start} a ${dateRange.end} (${daily.length} dias)`,
       roas_checkout: totalSpend > 0 ? gross / totalSpend : 0,
       cac_per_lead: leads > 0 ? totalSpend / leads : 0,
       cac_per_deal: 0,
@@ -194,7 +222,7 @@ function App() {
       <main className="max-w-[1400px] mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
         {dateRange && (
           <div className="mb-3 px-3 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-xs sm:text-sm flex items-center justify-between">
-            <span>Filtrando: <strong>{dateRange.start}</strong> a <strong>{dateRange.end}</strong></span>
+            <span>Filtrando: <strong>{dateRange.start}</strong> a <strong>{dateRange.end}</strong> ({filtered.daily_revenue.length} dias com dados)</span>
             <button onClick={() => setDateRange(null)} className="text-slate-400 hover:text-white text-xs underline">Limpar</button>
           </div>
         )}
@@ -206,10 +234,15 @@ function App() {
         )}
         <KPICards kpis={yearKPIs} year={selectedYear} />
         <div className="mt-4 sm:mt-6">
-          {activeTab === 'overview' && <OverviewTab yearlySummary={data.yearly_summary} overview={data.overview} selectedYear={selectedYear} monthlyCombined={filtered.monthly_combined} cohort={data.cohort} ltv={data.ltv} dataSources={data.data_sources} dataCoverage={data.data_coverage} crmDealAnalysis={data.crm_deal_analysis} />}
-          {activeTab === 'receita' && <RevenueTab monthly={filtered.monthly_revenue} daily={filtered.daily_revenue} crmMonthly={filtered.crm_monthly_won} />}
+          {dateRange && ['produtos', 'geo', 'clientes', 'leads', 'marketing', 'pagamentos'].includes(activeTab) && (
+            <div className="mb-3 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-400 text-[10px] sm:text-xs">
+              Dados mensais — filtro diario nao disponivel para esta aba. Mostrando meses completos dentro do periodo selecionado.
+            </div>
+          )}
+          {activeTab === 'overview' && <OverviewTab yearlySummary={data.yearly_summary} overview={data.overview} selectedYear={selectedYear} monthlyCombined={filtered.monthly_combined} cohort={data.cohort} ltv={data.ltv} dataSources={data.data_sources} dataCoverage={data.data_coverage} crmDealAnalysis={data.crm_deal_analysis} dailyMonthlyRevenue={dailyMonthly} />}
+          {activeTab === 'receita' && <RevenueTab monthly={dailyMonthly || filtered.monthly_revenue} daily={filtered.daily_revenue} crmMonthly={filtered.crm_monthly_won} />}
           {activeTab === 'midia' && <MediaTab meta={filtered.meta_monthly} google={filtered.google_monthly} metaStats={data.meta_campaigns} googleCampaigns={data.google_campaigns} />}
-          {activeTab === 'roas' && <ROASTab meta={filtered.meta_monthly} google={filtered.google_monthly} revenue={filtered.monthly_revenue} monthlyCombined={filtered.monthly_combined} />}
+          {activeTab === 'roas' && <ROASTab meta={filtered.meta_monthly} google={filtered.google_monthly} revenue={dailyMonthly || filtered.monthly_revenue} monthlyCombined={filtered.monthly_combined} />}
           {activeTab === 'produtos' && <ProductsTab data={filtered.products} utmSources={data.utm_sources} utmCampaigns={data.utm_campaigns} />}
           {activeTab === 'geo' && <GeoTab data={filtered.states} />}
           {activeTab === 'crm' && <CRMTab daily={filtered.crm_daily} details={data.crm_details} />}

@@ -13,8 +13,8 @@ const VerifiedBadge = () => <span className="inline-flex items-center gap-0.5 te
   BQ Verified
 </span>
 
-export function OverviewTab({ yearlySummary, overview, selectedYear, monthlyCombined, cohort, ltv, dataSources, dataCoverage, crmDealAnalysis }: {
-  yearlySummary: any[]; overview: any; selectedYear: string; monthlyCombined: any[]; cohort: any[]; ltv: any; dataSources: any; dataCoverage?: any; crmDealAnalysis?: any
+export function OverviewTab({ yearlySummary, overview, selectedYear, monthlyCombined, cohort, ltv, dataSources, dataCoverage, crmDealAnalysis, dailyMonthlyRevenue }: {
+  yearlySummary: any[]; overview: any; selectedYear: string; monthlyCombined: any[]; cohort: any[]; ltv: any; dataSources: any; dataCoverage?: any; crmDealAnalysis?: any; dailyMonthlyRevenue?: any[] | null
 }) {
   const [drillYear, setDrillYear] = useState<string | null>(null)
   const [showDealDetail, setShowDealDetail] = useState(false)
