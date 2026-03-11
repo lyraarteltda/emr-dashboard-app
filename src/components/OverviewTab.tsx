@@ -2,9 +2,10 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { useState } from 'react'
 
 const fmt = (v: number) => {
-  if (v >= 1e6) return `R$ ${(v/1e6).toFixed(2).replace('.', ',')}M`
-  if (v >= 1e3) return `R$ ${(v/1e3).toFixed(1).replace('.', ',')}K`
-  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  const n = v ?? 0
+  if (n >= 1e6) return `R$ ${(n/1e6).toFixed(2).replace('.', ',')}M`
+  if (n >= 1e3) return `R$ ${(n/1e3).toFixed(1).replace('.', ',')}K`
+  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 const SourceBadge = ({ src }: { src: string }) => <span className="text-[8px] sm:text-[9px] text-slate-500 bg-slate-800 px-1 rounded ml-1">{src}</span>
 const VerifiedBadge = () => <span className="inline-flex items-center gap-0.5 text-[8px] sm:text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 ml-1.5 shrink-0">
@@ -30,7 +31,7 @@ export function OverviewTab({ yearlySummary, overview, selectedYear, monthlyComb
 
   // Totals for all-period row
   const totalCheckout = yearData.reduce((s: number, y: any) => s + y.checkout_gross, 0)
-  const totalCRM = yearData.reduce((s: number, y: any) => s + y.crm_won_value, 0)
+  const totalCRM = yearData.reduce((s: number, y: any) => s + (y.crm_won_value || 0), 0)
   const totalMeta = yearData.reduce((s: number, y: any) => s + y.meta_spend, 0)
   const totalGoogle = yearData.reduce((s: number, y: any) => s + y.google_spend, 0)
   const totalAds = totalMeta + totalGoogle
@@ -87,7 +88,7 @@ export function OverviewTab({ yearlySummary, overview, selectedYear, monthlyComb
                 <td className="py-2 px-2 text-right text-amber-400">{fmt(totalGoogle)}</td>
                 <td className="py-2 px-2 text-right text-red-400">{fmt(totalAds)}</td>
                 <td className="py-2 px-2 text-right text-emerald-400">{totalAds > 0 ? `${(totalCheckout / totalAds).toFixed(1)}x` : '-'}</td>
-                <td className="py-2 px-2 text-right text-purple-400">{totalAds > 0 ? `${(totalCRM / totalAds).toFixed(2)}x` : '-'}</td>
+                <td className="py-2 px-2 text-right text-purple-400">{totalAds > 0 && totalCRM > 0 ? `${(totalCRM / totalAds).toFixed(2)}x` : '-'}</td>
                 <td className="py-2 px-2 text-right text-red-400">{fmt(totalRefunds)}</td>
                 <td className="py-2 px-2 text-right text-slate-300">{totalTxns.toLocaleString('pt-BR')}</td>
                 <td className="py-2 px-2 text-right text-pink-400">{totalLeads.toLocaleString('pt-BR')}</td>
@@ -167,11 +168,11 @@ export function OverviewTab({ yearlySummary, overview, selectedYear, monthlyComb
             </div>
             <div className="bg-slate-700/30 rounded p-2">
               <div className="text-[9px] text-slate-400">Valor Total Won</div>
-              <div className="text-sm sm:text-lg font-bold text-purple-300">{fmt(crmDealAnalysis.total_won_value)}</div>
+              <div className="text-sm sm:text-lg font-bold text-purple-300">{fmt(crmDealAnalysis.total_won_value || 0)}</div>
             </div>
             <div className="bg-slate-700/30 rounded p-2">
               <div className="text-[9px] text-slate-400">Ticket Medio Deal</div>
-              <div className="text-sm sm:text-lg font-bold text-amber-400">{fmt(crmDealAnalysis.total_won_value / crmDealAnalysis.total_won_deals)}</div>
+              <div className="text-sm sm:text-lg font-bold text-amber-400">{fmt(crmDealAnalysis.total_won_deals > 0 ? (crmDealAnalysis.total_won_value || 0) / crmDealAnalysis.total_won_deals : 0)}</div>
             </div>
             <div className="bg-slate-700/30 rounded p-2">
               <div className="text-[9px] text-slate-400">Deals com Valor 0</div>

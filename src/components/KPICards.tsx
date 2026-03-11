@@ -1,9 +1,10 @@
 const fmt = (v: number) => {
-  if (v >= 1e6) return `R$ ${(v/1e6).toFixed(2).replace('.', ',')}M`
-  if (v >= 1e3) return `R$ ${(v/1e3).toFixed(1).replace('.', ',')}K`
-  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  const n = v ?? 0
+  if (n >= 1e6) return `R$ ${(n/1e6).toFixed(2).replace('.', ',')}M`
+  if (n >= 1e3) return `R$ ${(n/1e3).toFixed(1).replace('.', ',')}K`
+  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
-const fmtN = (v: number) => v >= 1e6 ? `${(v/1e6).toFixed(1).replace('.', ',')}M` : v >= 1e3 ? `${(v/1e3).toFixed(1).replace('.', ',')}K` : v.toLocaleString('pt-BR')
+const fmtN = (v: number) => { const n = v ?? 0; return n >= 1e6 ? `${(n/1e6).toFixed(1).replace('.', ',')}M` : n >= 1e3 ? `${(n/1e3).toFixed(1).replace('.', ',')}K` : n.toLocaleString('pt-BR') }
 
 export function KPICards({ kpis, year }: { kpis: any; year?: string }) {
   // REVENUE SOURCE OF TRUTH: Guru Manager (checkout) only — CRM tracks funnel, NOT payments

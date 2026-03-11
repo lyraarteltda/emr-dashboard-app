@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts'
 
-const fmt = (v: number) => v >= 1e6 ? `R$${(v / 1e6).toFixed(2)}M` : v >= 1e3 ? `R$${(v / 1e3).toFixed(1)}K` : `R$${v.toFixed(0)}`
+const fmt = (v: number) => { const n = v ?? 0; return n >= 1e6 ? `R$${(n / 1e6).toFixed(2)}M` : n >= 1e3 ? `R$${(n / 1e3).toFixed(1)}K` : `R$${n.toFixed(0)}` }
 
 function PulsingDot() {
   return <span className="inline-block w-2 h-2 rounded-full bg-slate-500 animate-pulse" />

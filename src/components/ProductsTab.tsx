@@ -1,7 +1,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#ec4899', '#06b6d4', '#f97316', '#84cc16', '#a78bfa']
-const fmt = (v: number) => v >= 1e6 ? `R$${(v/1e6).toFixed(2).replace('.', ',')}M` : v >= 1e3 ? `R$${(v/1e3).toFixed(1).replace('.', ',')}K` : `R$${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+const fmt = (v: number) => { const n = v ?? 0; return n >= 1e6 ? `R$${(n/1e6).toFixed(2).replace('.', ',')}M` : n >= 1e3 ? `R$${(n/1e3).toFixed(1).replace('.', ',')}K` : `R$${n.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` }
 
 export function ProductsTab({ data, utmSources, utmCampaigns }: { data: any[]; utmSources: any[]; utmCampaigns: any[] }) {
   const totalSales = data.reduce((s: number, p: any) => s + (p.count || 0), 0)

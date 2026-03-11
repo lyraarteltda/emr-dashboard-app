@@ -1,4 +1,4 @@
-const fmtBRL = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+const fmtBRL = (v: number) => (v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
 export function DebugTab({ data }: { data: any }) {
   const ys = data.yearly_summary || []

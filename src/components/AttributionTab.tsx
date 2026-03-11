@@ -5,7 +5,7 @@ const COLORS_FIRST = ['#10b981', '#059669', '#34d399', '#6ee7b7', '#a7f3d0', '#0
 const COLORS_LAST = ['#3b82f6', '#2563eb', '#60a5fa', '#93c5fd', '#bfdbfe', '#1e40af', '#1d4ed8', '#0ea5e9', '#38bdf8', '#7dd3fc', '#0284c7', '#0369a1', '#075985', '#0c4a6e', '#164e63']
 const PIE_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']
 
-const fmt = (v: number) => v >= 1e6 ? `R$${(v / 1e6).toFixed(2)}M` : v >= 1e3 ? `R$${(v / 1e3).toFixed(1)}K` : `R$${v.toFixed(0)}`
+const fmt = (v: number) => { const n = v ?? 0; return n >= 1e6 ? `R$${(n / 1e6).toFixed(2)}M` : n >= 1e3 ? `R$${(n / 1e3).toFixed(1)}K` : `R$${n.toFixed(0)}` }
 
 function PulsingDot() {
   return <span className="inline-block w-2 h-2 rounded-full bg-slate-500 animate-pulse" />
